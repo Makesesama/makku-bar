@@ -72,9 +72,7 @@ class VolumeWidget(Box):
 
 
 class StatusBar(Window):
-    def __init__(
-        self,
-    ):
+    def __init__(self, display: int, monitor: int = 1, with_system_tray: bool = False):
         super().__init__(
             name="bar",
             layer="top",
@@ -83,15 +81,19 @@ class StatusBar(Window):
             exclusivity="auto",
             visible=False,
             all_visible=False,
+            monitor=monitor,
         )
         self.workspaces = RiverWorkspaces(
-            44,
+            display,
             name="workspaces",
             spacing=4,
             buttons_factory=lambda ws_id: RiverWorkspaceButton(id=ws_id, label=None),
         )
         self.date_time = DateTime(name="date-time")
-        self.system_tray = SystemTray(name="system-tray", spacing=4)
+        self.system_tray = None
+        if with_system_tray:
+            self.system_tray = SystemTray(name="system-tray", spacing=4)
+
         self.active_window = RiverActiveWindow(
             name="active-window",
             max_length=50,
@@ -120,6 +122,17 @@ class StatusBar(Window):
         )
         self.status_container.add(VolumeWidget()) if AUDIO_WIDGET is True else None
 
+        end_container_children = [
+            self.status_container,
+            self.date_time,
+        ]
+
+        if self.system_tray is not None:
+            end_container_children = [
+                self.status_container,
+                self.system_tray,
+                self.date_time,
+            ]
         self.children = CenterBox(
             name="bar-inner",
             start_children=Box(
@@ -138,11 +151,7 @@ class StatusBar(Window):
                 name="end-container",
                 spacing=4,
                 orientation="h",
-                children=[
-                    self.status_container,
-                    self.system_tray,
-                    self.date_time,
-                ],
+                children=end_container_children,
             ),
         )
 
@@ -157,8 +166,9 @@ class StatusBar(Window):
 
 
 def main():
-    bar = StatusBar()
-    app = Application("bar", bar)
+    bar = StatusBar(45)
+    bar_two = StatusBar(44, monitor=2, with_system_tray=True)
+    app = Application("bar", bar, bar_two)
     app.set_stylesheet_from_file(get_relative_path("bar.css"))
 
     app.run()
