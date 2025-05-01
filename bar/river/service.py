@@ -11,7 +11,7 @@ from fabric.utils.helpers import idle_add
 # Import pywayland components - ensure these imports are correct
 from pywayland.client import Display
 from pywayland.protocol.wayland import WlOutput, WlRegistry, WlSeat
-from ..generated.river_status_unstable_v1 import ZriverStatusManagerV1
+from .generated.river_status_unstable_v1 import ZriverStatusManagerV1
 
 
 @dataclass
@@ -41,6 +41,11 @@ class River(Service):
     def ready(self) -> bool:
         return self._ready
 
+    @Property(str, "readable", "active-window", default_value="")
+    def active_window(self) -> str:
+        """Get the title of the currently active window"""
+        return self._active_window_title
+
     @Signal
     def ready(self):
         return self.notify("ready")
@@ -52,6 +57,7 @@ class River(Service):
         """Initialize the River service"""
         super().__init__(**kwargs)
         self._ready = False
+        self._active_window_title = ""
         self.outputs: Dict[int, OutputInfo] = {}
         self.river_status_mgr = None
         self.seat = None
@@ -144,6 +150,23 @@ class River(Service):
                 logger.error("[RiverService] River status manager not found")
                 return
 
+                # Handle the window title updates through seat status
+
+            def focused_view_handler(_, title):
+                logger.debug(f"[RiverService] Focused view title: {title}")
+                self._active_window_title = title
+                idle_add(lambda: self._emit_active_window(title))
+
+                # Get the seat status to track active window
+
+            if state["seat"]:
+                seat_status = state["river_status_mgr"].get_river_seat_status(
+                    state["seat"]
+                )
+                seat_status.dispatcher["focused_view"] = focused_view_handler
+                state["seat_status"] = seat_status
+                logger.info("[RiverService] Set up seat status for window tracking")
+
             # Create view tags and focused tags handlers
             def make_view_tags_handler(output_id):
                 def handler(_, tags):
@@ -221,6 +244,13 @@ class River(Service):
         self.emit(f"event::focused_tags::{output_id}", tags)
         return False  # Don't repeat
 
+    def _emit_active_window(self, title):
+        """Emit active window title events (called on main thread)"""
+        event = RiverEvent("active_window", [title])
+        self.emit("event::active_window", event)
+        self.notify("active-window")
+        return False  # Don't repeat
+
     @staticmethod
     def _decode_bitfields(bitfields) -> List[int]:
         """Decode River's tag bitfields into a list of tag indices"""
@@ -255,4 +285,4 @@ class River(Service):
     def toggle_focused_tag(self, tag):
         """Toggle a tag in the focused tags"""
         tag_mask = 1 << int(tag)
-        self.run_command("toggle-focused-tags", str(tag_mask))
+        self.run_command("set-focused-tags", str(tag_mask))

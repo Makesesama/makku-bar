@@ -25,8 +25,8 @@ from pywayland.protocol_core import (
     Resource,
 )
 
-from ..wayland import WlOutput
-from ..wayland import WlSeat
+from pywayland.protocol.wayland import WlOutput
+from pywayland.protocol.wayland import WlSeat
 from .zriver_output_status_v1 import ZriverOutputStatusV1
 from .zriver_seat_status_v1 import ZriverSeatStatusV1
 

@@ -6,7 +6,7 @@ from dataclasses import dataclass, field
 from typing import Callable
 from pywayland.client import Display
 from pywayland.protocol.wayland import WlOutput, WlRegistry, WlSeat
-from .generated.river_status_unstable_v1 import (
+from generated.river_status_unstable_v1 import (
     ZriverStatusManagerV1,
     ZriverOutputStatusV1,
 )

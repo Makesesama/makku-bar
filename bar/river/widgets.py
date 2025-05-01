@@ -3,6 +3,7 @@ from fabric.core.service import Property
 from fabric.widgets.button import Button
 from fabric.widgets.box import Box
 from fabric.widgets.eventbox import EventBox
+from fabric.widgets.label import Label
 from fabric.utils.helpers import bulk_connect
 from .service import River
 
@@ -179,3 +180,52 @@ class RiverWorkspaces(EventBox):
         elif direction == Gdk.ScrollDirection.UP:
             logger.info("[RiverWorkspaces] Scroll up - focusing previous view")
             self.service.run_command("focus-view", "previous")
+
+
+class RiverActiveWindow(Label):
+    """Widget to display the currently active window's title"""
+
+    def __init__(self, max_length=None, ellipsize="end", **kwargs):
+        super().__init__(**kwargs)
+        self.service = get_river_connection()
+        self.max_length = max_length
+        self.ellipsize = ellipsize
+
+        # Set initial state
+        if self.service.ready:
+            self.on_ready(None)
+        else:
+            self.service.connect("event::ready", self.on_ready)
+
+        # Connect to active window changes
+        self.service.connect("event::active_window", self.on_active_window_changed)
+
+    def on_ready(self, _):
+        """Initialize widget when service is ready"""
+        logger.debug("[RiverActiveWindow] Service ready")
+        self.update_title(self.service.active_window)
+
+    def on_active_window_changed(self, _, event):
+        """Update widget when active window changes"""
+        title = event.data[0] if event.data else ""
+        logger.debug(f"[RiverActiveWindow] Window changed to: {title}")
+        self.update_title(title)
+
+    def update_title(self, title):
+        """Update the label with the window title"""
+        if not title:
+            self.label = ""
+            self.set_label(self.label)
+            return
+
+        if self.max_length and len(title) > self.max_length:
+            if self.ellipsize == "end":
+                title = title[: self.max_length] + "..."
+            elif self.ellipsize == "middle":
+                half = (self.max_length - 3) // 2
+                title = title[:half] + "..." + title[-half:]
+            elif self.ellipsize == "start":
+                title = "..." + title[-self.max_length :]
+
+        self.label = title
+        self.set_label(self.label)

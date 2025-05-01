@@ -87,7 +87,14 @@ button {
     background-color: var(--ws-active);
 }
 
+#center-container {
+  color: #ffffff;
+}
 
+.active-window {
+  color: #ffffff;
+  font-weight: bold;
+}
 
 #date-time,
 #hyprland-language,

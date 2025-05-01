@@ -25,7 +25,7 @@ from pywayland.protocol_core import (
     Resource,
 )
 
-from ..wayland import WlOutput
+from pywayland.protocol.wayland import WlOutput
 
 
 class ZriverSeatStatusV1(Interface):

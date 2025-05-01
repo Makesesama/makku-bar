@@ -11,7 +11,7 @@ from fabric.widgets.centerbox import CenterBox
 from fabric.system_tray.widgets import SystemTray
 from fabric.widgets.circularprogressbar import CircularProgressBar
 from fabric.widgets.wayland import WaylandWindow as Window
-from .river.widgets import RiverWorkspaces, RiverWorkspaceButton
+from .river.widgets import RiverWorkspaces, RiverWorkspaceButton, RiverActiveWindow
 from fabric.utils import (
     FormattedString,
     bulk_replace,
@@ -92,6 +92,11 @@ class StatusBar(Window):
         )
         self.date_time = DateTime(name="date-time")
         self.system_tray = SystemTray(name="system-tray", spacing=4)
+        self.active_window = RiverActiveWindow(
+            name="active-window",
+            max_length=50,
+            style="color: #ffffff; font-size: 14px; font-weight: bold;",
+        )
 
         self.ram_progress_bar = CircularProgressBar(
             name="ram-progress-bar", pie=True, size=24
@@ -127,6 +132,7 @@ class StatusBar(Window):
                 name="center-container",
                 spacing=4,
                 orientation="h",
+                children=[self.active_window],
             ),
             end_children=Box(
                 name="end-container",
