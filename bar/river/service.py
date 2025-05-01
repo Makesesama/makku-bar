@@ -191,7 +191,7 @@ class River(Service):
             # Main event loop
             logger.info("[RiverService] Entering main event loop")
             while True:
-                display.roundtrip()
+                display.dispatch(block=True)
                 time.sleep(0.01)  # Small sleep to prevent CPU spinning
 
         except Exception as e:
