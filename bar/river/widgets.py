@@ -1,3 +1,4 @@
+from loguru import logger
 from fabric.core.service import Property
 from fabric.widgets.button import Button
 from fabric.widgets.box import Box
@@ -49,22 +50,29 @@ class RiverWorkspaceButton(Button):
 
 
 class RiverWorkspaces(EventBox):
-    def __init__(self, output_id: int, max_tags: int = 9, **kwargs):
+    def __init__(self, output_id=None, max_tags=9, **kwargs):
         super().__init__(events="scroll")
-        self.output_id = output_id
-        self.max_tags = max_tags
         self.service = get_river_connection()
         self._box = Box(**kwargs)
         self.children = self._box
 
+        # Store output_id as received
+        self.output_id = output_id
+
+        self.max_tags = max_tags
+        # Create buttons for tags 0 to max_tags-1 (to match River's 0-based tag indexing)
         self._buttons = {i: RiverWorkspaceButton(i) for i in range(max_tags)}
+
         for btn in self._buttons.values():
             btn.connect("clicked", self.on_workspace_click)
             self._box.add(btn)
 
-        # hook into River signals
-        self.service.connect(f"event::focused_tags::{output_id}", self.on_focus_change)
-        self.service.connect(f"event::view_tags::{output_id}", self.on_view_change)
+        # Connect to service events
+        self.service.connect("event::focused_tags", self.on_focus_change_general)
+        self.service.connect("event::view_tags", self.on_view_change_general)
+        self.service.connect("event::output_removed", self.on_output_removed)
+
+        # Initial setup when service is ready
         if self.service.ready:
             self.on_ready(None)
         else:
@@ -73,27 +81,101 @@ class RiverWorkspaces(EventBox):
         self.connect("scroll-event", self.on_scroll)
 
     def on_ready(self, _):
-        print(self.service.outputs)
+        """Initialize widget state when service is ready"""
+        logger.debug(
+            f"[RiverWorkspaces] Service ready, outputs: {list(self.service.outputs.keys())}"
+        )
 
-    def on_focus_change(self, _, tags: list[int]):
-        print(tags)
+        # If no output_id was specified, take the first one
+        if self.output_id is None and self.service.outputs:
+            self.output_id = next(iter(self.service.outputs.keys()))
+            logger.info(f"[RiverWorkspaces] Selected output {self.output_id}")
+
+        # Initialize state from selected output
+        if self.output_id is not None and self.output_id in self.service.outputs:
+            output_info = self.service.outputs[self.output_id]
+
+            # Initialize buttons with current state
+            # Access fields directly on the OutputInfo dataclass
+            focused_tags = output_info.tags_focused
+            view_tags = output_info.tags_view
+
+            logger.debug(
+                f"[RiverWorkspaces] Initial state - focused: {focused_tags}, view: {view_tags}"
+            )
+
+            for i, btn in self._buttons.items():
+                btn.active = i in focused_tags
+                btn.empty = i not in view_tags
+
+    def on_focus_change(self, _, tags):
+        """Handle focused tags change for our specific output"""
+        logger.debug(
+            f"[RiverWorkspaces] Focus change on output {self.output_id}: {tags}"
+        )
         for i, btn in self._buttons.items():
             btn.active = i in tags
 
-    def on_view_change(self, _, tags: list[int]):
-        print(tags)
+    def on_view_change(self, _, tags):
+        """Handle view tags change for our specific output"""
+        logger.debug(
+            f"[RiverWorkspaces] View change on output {self.output_id}: {tags}"
+        )
         for i, btn in self._buttons.items():
             btn.empty = i not in tags
 
-    def on_workspace_click(self, btn: RiverWorkspaceButton):
-        import subprocess
+    def on_focus_change_general(self, _, event):
+        """Handle general focused tags event"""
+        # Only handle event if it's for our output
+        if event.output_id == self.output_id:
+            logger.debug(
+                f"[RiverWorkspaces] General focus change for output {self.output_id}"
+            )
+            self.on_focus_change(_, event.data)
 
-        subprocess.run(["riverctl", "tag", str(btn.id)])
-        return
+    def on_view_change_general(self, _, event):
+        """Handle general view tags event"""
+        # Only handle event if it's for our output
+        if event.output_id == self.output_id:
+            logger.debug(
+                f"[RiverWorkspaces] General view change for output {self.output_id}"
+            )
+            self.on_view_change(_, event.data)
 
-    def on_scroll(self, _, event: Gdk.EventScroll):
-        direction = event.direction  # UP or DOWN
-        cmd = "tag +1" if direction == Gdk.ScrollDirection.DOWN else "tag -1"
-        import subprocess
+    def on_output_removed(self, _, event):
+        """Handle output removal"""
+        removed_id = event.data[0]
 
-        subprocess.run(["riverctl", *cmd.split()])
+        if removed_id == self.output_id:
+            logger.info(f"[RiverWorkspaces] Our output {self.output_id} was removed")
+
+            # Try to find another output
+            if self.service.outputs:
+                self.output_id = next(iter(self.service.outputs.keys()))
+                logger.info(f"[RiverWorkspaces] Switching to output {self.output_id}")
+
+                # Update state for new output
+                if self.output_id in self.service.outputs:
+                    output_info = self.service.outputs[self.output_id]
+                    # Access fields directly on the OutputInfo dataclass
+                    focused_tags = output_info.tags_focused
+                    view_tags = output_info.tags_view
+
+                    for i, btn in self._buttons.items():
+                        btn.active = i in focused_tags
+                        btn.empty = i not in view_tags
+
+    def on_workspace_click(self, btn):
+        """Handle workspace button click"""
+        logger.info(f"[RiverWorkspaces] Clicked on workspace {btn.id}")
+        self.service.toggle_focused_tag(btn.id)
+
+    def on_scroll(self, _, event):
+        """Handle scroll events"""
+        direction = event.direction
+        if direction == Gdk.ScrollDirection.DOWN:
+            logger.info("[RiverWorkspaces] Scroll down - focusing next view")
+            self.service.run_command("focus-view", "next")
+        elif direction == Gdk.ScrollDirection.UP:
+            logger.info("[RiverWorkspaces] Scroll up - focusing previous view")
+            self.service.run_command("focus-view", "previous")

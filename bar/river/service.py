@@ -1,29 +1,42 @@
-import logging
+import os
+import threading
+import time
+from loguru import logger
 from dataclasses import dataclass, field
-from typing import Dict, List
+from typing import Dict, List, Optional, Any, Set
 
 from fabric.core.service import Service, Signal, Property
-from pywayland.client import Display
-from pywayland.protocol.wayland import WlOutput, WlSeat
-from ..generated.river_status_unstable_v1 import (
-    ZriverStatusManagerV1,
-    ZriverOutputStatusV1,
-    ZriverSeatStatusV1,
-)
+from fabric.utils.helpers import idle_add
 
-logger = logging.getLogger(__name__)
+# Import pywayland components - ensure these imports are correct
+from pywayland.client import Display
+from pywayland.protocol.wayland import WlOutput, WlRegistry, WlSeat
+from ..generated.river_status_unstable_v1 import ZriverStatusManagerV1
 
 
 @dataclass
-class OutputState:
-    id: int
+class OutputInfo:
+    """Information about a River output"""
+
+    name: int
     output: WlOutput
-    status: ZriverOutputStatusV1 = None
-    focused_tags: List[int] = field(default_factory=list)
-    view_tags: List[int] = field(default_factory=list)
+    status: Any = None  # ZriverOutputStatusV1
+    tags_view: List[int] = field(default_factory=list)
+    tags_focused: List[int] = field(default_factory=list)
+
+
+@dataclass(frozen=True)
+class RiverEvent:
+    """Event data from River compositor"""
+
+    name: str
+    data: List[Any]
+    output_id: Optional[int] = None
 
 
 class River(Service):
+    """Connection to River Wayland compositor via river-status protocol"""
+
     @Property(bool, "readable", "is-ready", default_value=False)
     def ready(self) -> bool:
         return self._ready
@@ -36,82 +49,210 @@ class River(Service):
     def event(self, event: object): ...
 
     def __init__(self, **kwargs):
+        """Initialize the River service"""
         super().__init__(**kwargs)
         self._ready = False
-        self.display = None
-        self.registry = None
-        self.outputs: Dict[int, OutputState] = {}
-        self.status_mgr = None
+        self.outputs: Dict[int, OutputInfo] = {}
+        self.river_status_mgr = None
         self.seat = None
-        self.seat_status: ZriverSeatStatusV1 = None
-        self.ready.emit()
+        self.seat_status = None
 
-    def on_start(self):
-        print("✅ River.on_start called")
+        # Start the connection in a separate thread
+        self.river_thread = threading.Thread(
+            target=self._river_connection_task, daemon=True, name="river-status-service"
+        )
+        self.river_thread.start()
 
-        logger.info("[RiverService] Starting River service...")
-        self.display = Display()
-        self.display.connect()
-        self.registry = self.display.get_registry()
+    def _river_connection_task(self):
+        """Main thread that connects to River and listens for events"""
+        try:
+            # Create a new display connection - THIS IS WHERE THE ERROR OCCURS
+            logger.info("[RiverService] Starting connection to River")
 
-        self.registry.dispatcher["global"] = self._on_global
-        self.registry.dispatcher["global_remove"] = lambda *_: None
+            # Let's add some more diagnostic info to help troubleshoot
+            logger.debug(
+                f"[RiverService] XDG_RUNTIME_DIR={os.environ.get('XDG_RUNTIME_DIR', 'Not set')}"
+            )
+            logger.debug(
+                f"[RiverService] WAYLAND_DISPLAY={os.environ.get('WAYLAND_DISPLAY', 'Not set')}"
+            )
 
-        self.display.roundtrip()
+            # Create the display connection
+            # with Display() as display:
+            #     registry = display.get_registry()
+            #     logger.debug("[RiverService] Registry obtained")
 
-        if self.seat and self.status_mgr:
-            self.seat_status = self.status_mgr.get_river_seat_status(self.seat)
+            # Discover globals
 
-        for id, output_state in self.outputs.items():
-            status = self.status_mgr.get_river_output_status(output_state.output)
-            output_state.status = status
-            status.dispatcher["focused_tags"] = self._make_focused_handler(id)
-            status.dispatcher["view_tags"] = self._make_view_handler(id)
+            display = Display("wayland-1")
+            display.connect()
+            logger.debug("[RiverService] Display connection created")
 
-        self.display.roundtrip()
+            # Get the registry
+            registry = display.get_registry()
+            logger.debug("[RiverService] Registry obtained")
 
+            # Create state object to hold our data
+            state = {
+                "display": display,
+                "registry": registry,
+                "outputs": {},
+                "river_status_mgr": None,
+                "seat": None,
+                "seat_status": None,
+            }
+
+            # Set up registry handlers - using more direct approach like your example
+            def handle_global(registry, name, iface, version):
+                logger.debug(
+                    f"[RiverService] Global: {iface} (v{version}, name={name})"
+                )
+                if iface == "zriver_status_manager_v1":
+                    state["river_status_mgr"] = registry.bind(
+                        name, ZriverStatusManagerV1, version
+                    )
+                    logger.info("[RiverService] Found river status manager")
+                elif iface == "wl_output":
+                    output = registry.bind(name, WlOutput, version)
+                    state["outputs"][name] = OutputInfo(name=name, output=output)
+                    logger.info(f"[RiverService] Found output {name}")
+                elif iface == "wl_seat":
+                    state["seat"] = registry.bind(name, WlSeat, version)
+                    logger.info("[RiverService] Found seat")
+
+            def handle_global_remove(registry, name):
+                if name in state["outputs"]:
+                    logger.info(f"[RiverService] Output {name} removed")
+                    del state["outputs"][name]
+                    idle_add(
+                        lambda: self.emit(
+                            "event::output_removed",
+                            RiverEvent("output_removed", [name]),
+                        )
+                    )
+
+            # Set up the dispatchers
+            registry.dispatcher["global"] = handle_global
+            registry.dispatcher["global_remove"] = handle_global_remove
+
+            # Discover globals
+            logger.debug("[RiverService] Performing initial roundtrip")
+            display.roundtrip()
+
+            # Check if we found the river status manager
+            if not state["river_status_mgr"]:
+                logger.error("[RiverService] River status manager not found")
+                return
+
+            # Create view tags and focused tags handlers
+            def make_view_tags_handler(output_id):
+                def handler(_, tags):
+                    decoded = self._decode_bitfields(tags)
+                    state["outputs"][output_id].tags_view = decoded
+                    logger.debug(
+                        f"[RiverService] Output {output_id} view tags: {decoded}"
+                    )
+                    idle_add(lambda: self._emit_view_tags(output_id, decoded))
+
+                return handler
+
+            def make_focused_tags_handler(output_id):
+                def handler(_, tags):
+                    decoded = self._decode_bitfields(tags)
+                    state["outputs"][output_id].tags_focused = decoded
+                    logger.debug(
+                        f"[RiverService] Output {output_id} focused tags: {decoded}"
+                    )
+                    idle_add(lambda: self._emit_focused_tags(output_id, decoded))
+
+                return handler
+
+            # Bind output status listeners
+            for name, info in list(state["outputs"].items()):
+                status = state["river_status_mgr"].get_river_output_status(info.output)
+                status.dispatcher["view_tags"] = make_view_tags_handler(name)
+                status.dispatcher["focused_tags"] = make_focused_tags_handler(name)
+                info.status = status
+                logger.info(f"[RiverService] Set up status for output {name}")
+
+            # Initial data fetch
+            logger.debug("[RiverService] Performing second roundtrip")
+            display.roundtrip()
+
+            # Update our outputs dictionary
+            self.outputs.update(state["outputs"])
+            self.river_status_mgr = state["river_status_mgr"]
+            self.seat = state["seat"]
+            self.seat_status = state.get("seat_status")
+
+            # Mark service as ready
+            idle_add(self._set_ready)
+
+            # Main event loop
+            logger.info("[RiverService] Entering main event loop")
+            while True:
+                display.roundtrip()
+                time.sleep(0.01)  # Small sleep to prevent CPU spinning
+
+        except Exception as e:
+            logger.error(f"[RiverService] Error in River connection: {e}")
+            import traceback
+
+            logger.error(traceback.format_exc())
+
+    def _set_ready(self):
+        """Set the service as ready (called on main thread via idle_add)"""
         self._ready = True
+        logger.info("[RiverService] Service ready")
         self.ready.emit()
-        logger.info("[RiverService] Ready. Monitoring tags.")
+        return False  # Don't repeat
 
-    def on_tick(self):
-        # Periodic poll
-        self.display.roundtrip()
+    def _emit_view_tags(self, output_id, tags):
+        """Emit view_tags events (called on main thread)"""
+        event = RiverEvent("view_tags", tags, output_id)
+        self.emit("event::view_tags", event)
+        self.emit(f"event::view_tags::{output_id}", tags)
+        return False  # Don't repeat
 
-    def _on_global(self, registry, name, interface, version):
-        if interface == "wl_output":
-            output = registry.bind(name, WlOutput, version)
-            self.outputs[name] = OutputState(id=name, output=output)
+    def _emit_focused_tags(self, output_id, tags):
+        """Emit focused_tags events (called on main thread)"""
+        event = RiverEvent("focused_tags", tags, output_id)
+        self.emit("event::focused_tags", event)
+        self.emit(f"event::focused_tags::{output_id}", tags)
+        return False  # Don't repeat
 
-        elif interface == "wl_seat":
-            self.seat = registry.bind(name, WlSeat, version)
+    @staticmethod
+    def _decode_bitfields(bitfields) -> List[int]:
+        """Decode River's tag bitfields into a list of tag indices"""
+        tags: Set[int] = set()
 
-        elif interface == "zriver_status_manager_v1":
-            self.status_mgr = registry.bind(name, ZriverStatusManagerV1, version)
+        # Ensure we have an iterable
+        if not hasattr(bitfields, "__iter__"):
+            bitfields = [bitfields]
 
-    def _make_focused_handler(self, output_id):
-        def handler(_, bitfield):
-            tags = self._decode_bitfield(bitfield)
-            self.outputs[output_id].focused_tags = tags
-            logger.debug(f"[RiverService] Output {output_id} focused: {tags}")
-            self.emit(f"event::focused_tags::{output_id}", tags)
+        for bits in bitfields:
+            for i in range(32):
+                if bits & (1 << i):
+                    tags.add(i)
 
-        return handler
-
-    def _make_view_handler(self, output_id):
-        def handler(_, array):
-            tags = self._decode_array_bitfields(array)
-            self.outputs[output_id].view_tags = tags
-            logger.debug(f"[RiverService] Output {output_id} views: {tags}")
-            self.emit(f"event::view_tags::{output_id}", tags)
-
-        return handler
-
-    def _decode_bitfield(self, bits: int) -> List[int]:
-        return [i for i in range(32) if bits & (1 << i)]
-
-    def _decode_array_bitfields(self, array) -> List[int]:
-        tags = set()
-        for bits in array:
-            tags.update(self._decode_bitfield(bits))
         return sorted(tags)
+
+    def run_command(self, command, *args):
+        """Run a riverctl command"""
+        import subprocess
+
+        cmd = ["riverctl", command] + [str(arg) for arg in args]
+        try:
+            result = subprocess.run(cmd, capture_output=True, text=True, check=True)
+            logger.info(f"[RiverService] Ran command: {' '.join(cmd)}")
+            return result.stdout.strip()
+        except subprocess.CalledProcessError as e:
+            logger.error(
+                f"[RiverService] Command failed: {' '.join(cmd)}, error: {e.stderr}"
+            )
+            return None
+
+    def toggle_focused_tag(self, tag):
+        """Toggle a tag in the focused tags"""
+        tag_mask = 1 << int(tag)
+        self.run_command("toggle-focused-tags", str(tag_mask))
