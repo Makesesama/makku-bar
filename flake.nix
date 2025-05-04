@@ -53,7 +53,7 @@
 
             package = lib.mkOption {
               type = lib.types.package;
-              default = pkgs.callPackage ./derivation.nix { inherit (pkgs) lib python3Packages; };
+              default = self.packages.${pkgs.system}.default;
               description = "The makku-bar package to use.";
             };
           };
