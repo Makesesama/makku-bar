@@ -28,7 +28,7 @@
     /* Functional variables */
     --window-bg: alpha(var(--background), 0.9);
     --module-bg: alpha(var(--mid-bg), 0.8);
-    --border-color: var(--mid-fg);
+    --border-color: var(--light-bg);
     --ws-active: var(--pink);
     --ws-inactive: var(--blue);
     --ws-empty: var(--dark-grey);

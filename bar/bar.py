@@ -89,7 +89,7 @@ class StatusBar(Window):
             spacing=4,
             buttons_factory=lambda ws_id: RiverWorkspaceButton(id=ws_id, label=None),
         )
-        self.date_time = DateTime(name="date-time")
+        self.date_time = DateTime(name="date-time", formatters="%d %b - %H:%M")
         self.system_tray = None
         if with_system_tray:
             self.system_tray = SystemTray(name="system-tray", spacing=4)
