@@ -159,6 +159,10 @@ menu>menuitem:hover {
     padding: 2px;
 }
 
+#nixos-label {
+    color: var(--blue);
+}
+
 tooltip {
     border: solid 2px;
     border-color: var(--border-color);

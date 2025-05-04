@@ -137,9 +137,12 @@ class StatusBar(Window):
             name="bar-inner",
             start_children=Box(
                 name="start-container",
-                spacing=4,
+                spacing=6,
                 orientation="h",
-                children=self.workspaces,
+                children=[
+                    Label(name="nixos-label", markup=""),
+                    self.workspaces,
+                ],
             ),
             center_children=Box(
                 name="center-container",
