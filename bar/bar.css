@@ -73,12 +73,21 @@ button {
     font-size: 0px;
 }
 
-#workspaces>button:hover {
+#workspaces button.hover {
     background-color: var(--ws-hover);
 }
 
-#workspaces>button.urgent {
+#workspaces button.urgent {
     background-color: var(--ws-urgent);
+    color: var(--foreground);
+    font-weight: bold;
+    animation: urgent-blink 1s infinite;
+}
+
+@keyframes urgent-blink {
+    0% { opacity: 1.0; }
+    50% { opacity: 0.5; }
+    100% { opacity: 1.0; }
 }
 
 #workspaces>button.empty {

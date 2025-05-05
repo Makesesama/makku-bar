@@ -10,7 +10,7 @@ from fabric.utils.helpers import idle_add
 
 # Import pywayland components - ensure these imports are correct
 from pywayland.client import Display
-from pywayland.protocol.wayland import WlOutput, WlRegistry, WlSeat
+from pywayland.protocol.wayland import WlOutput, WlSeat
 from .generated.river_status_unstable_v1 import ZriverStatusManagerV1
 
 
@@ -23,6 +23,7 @@ class OutputInfo:
     status: Any = None  # ZriverOutputStatusV1
     tags_view: List[int] = field(default_factory=list)
     tags_focused: List[int] = field(default_factory=list)
+    tags_urgent: List[int] = field(default_factory=list)
 
 
 @dataclass(frozen=True)
@@ -190,11 +191,23 @@ class River(Service):
 
                 return handler
 
+            def make_urgent_tags_handler(output_id):
+                def handler(_, tags):
+                    decoded = self._decode_bitfields(tags)
+                    state["outputs"][output_id].tags_urgent = decoded
+                    logger.debug(
+                        f"[RiverService] Output {output_id} urgent tags: {decoded}"
+                    )
+                    idle_add(lambda: self._emit_urgent_tags(output_id, decoded))
+
+                return handler
+
             # Bind output status listeners
             for name, info in list(state["outputs"].items()):
                 status = state["river_status_mgr"].get_river_output_status(info.output)
                 status.dispatcher["view_tags"] = make_view_tags_handler(name)
                 status.dispatcher["focused_tags"] = make_focused_tags_handler(name)
+                status.dispatcher["urgent_tags"] = make_urgent_tags_handler(name)
                 info.status = status
                 logger.info(f"[RiverService] Set up status for output {name}")
 
@@ -249,6 +262,13 @@ class River(Service):
         event = RiverEvent("active_window", [title])
         self.emit("event::active_window", event)
         self.notify("active-window")
+        return False  # Don't repeat
+
+    def _emit_urgent_tags(self, output_id, tags):
+        """Emit urgent_tags events (called on main thread)"""
+        event = RiverEvent("urgent_tags", tags, output_id)
+        self.emit("event::urgent_tags", event)
+        self.emit(f"event::urgent_tags::{output_id}", tags)
         return False  # Don't repeat
 
     @staticmethod

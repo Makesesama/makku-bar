@@ -43,11 +43,36 @@ class RiverWorkspaceButton(Button):
         self._empty = value
         (self.remove_style_class if not value else self.add_style_class)("empty")
 
+    @Property(bool, "read-write", default_value=False)
+    def urgent(self) -> bool:
+        return self._urgent
+
+    @urgent.setter
+    def urgent(self, value: bool):
+        self._urgent = value
+        self._update_style()
+
     def __init__(self, id: int, label: str = None, **kwargs):
         super().__init__(label or str(id), **kwargs)
         self._id = id
         self._active = False
         self._empty = True
+        self._urgent = False
+
+    def _update_style(self):
+        """Update button styles based on states"""
+        # Remove all state-related styles first
+        self.remove_style_class("active")
+        self.remove_style_class("empty")
+        self.remove_style_class("urgent")
+
+        # Then apply current states
+        if self._active:
+            self.add_style_class("active")
+        if self._empty:
+            self.add_style_class("empty")
+        if self._urgent:
+            self.add_style_class("urgent")
 
 
 class RiverWorkspaces(EventBox):
@@ -71,6 +96,7 @@ class RiverWorkspaces(EventBox):
         # Connect to service events
         self.service.connect("event::focused_tags", self.on_focus_change_general)
         self.service.connect("event::view_tags", self.on_view_change_general)
+        self.service.connect("event::urgent_tags", self.on_urgent_change_general)
         self.service.connect("event::output_removed", self.on_output_removed)
 
         # Initial setup when service is ready
@@ -100,14 +126,16 @@ class RiverWorkspaces(EventBox):
             # Access fields directly on the OutputInfo dataclass
             focused_tags = output_info.tags_focused
             view_tags = output_info.tags_view
+            urgent_tags = output_info.tags_urgent
 
             logger.debug(
-                f"[RiverWorkspaces] Initial state - focused: {focused_tags}, view: {view_tags}"
+                f"[RiverWorkspaces] Initial state - focused: {focused_tags}, view: {view_tags}, urgent: {urgent_tags}"
             )
 
             for i, btn in self._buttons.items():
                 btn.active = i in focused_tags
                 btn.empty = i not in view_tags
+                btn.urgent = i in urgent_tags
 
     def on_focus_change(self, _, tags):
         """Handle focused tags change for our specific output"""
@@ -142,6 +170,23 @@ class RiverWorkspaces(EventBox):
                 f"[RiverWorkspaces] General view change for output {self.output_id}"
             )
             self.on_view_change(_, event.data)
+
+    def on_urgent_change(self, _, tags):
+        """Handle urgent tags change for our specific output"""
+        logger.debug(
+            f"[RiverWorkspaces] Urgent change on output {self.output_id}: {tags}"
+        )
+        for i, btn in self._buttons.items():
+            btn.urgent = i in tags
+
+    def on_urgent_change_general(self, _, event):
+        """Handle general urgent tags event"""
+        # Only handle event if it's for our output
+        if event.output_id == self.output_id:
+            logger.debug(
+                f"[RiverWorkspaces] General urgent change for output {self.output_id}"
+            )
+            self.on_urgent_change(_, event.data)
 
     def on_output_removed(self, _, event):
         """Handle output removal"""
