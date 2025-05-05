@@ -18,6 +18,8 @@ from fabric.utils import (
     invoke_repeater,
     get_relative_path,
 )
+from bar.modules.player import Player
+from bar.modules.vinyl import VinylButton
 
 AUDIO_WIDGET = True
 
@@ -113,6 +115,8 @@ class StatusBar(Window):
                 Label("", style="margin: 0px 6px 0px 0px; font-size: 12px"),
             ],
         )
+        self.player = Player()
+        self.vinyl = VinylButton()
 
         self.status_container = Box(
             name="widgets-container",
@@ -123,12 +127,14 @@ class StatusBar(Window):
         self.status_container.add(VolumeWidget()) if AUDIO_WIDGET is True else None
 
         end_container_children = [
+            self.vinyl,
             self.status_container,
             self.date_time,
         ]
 
         if self.system_tray is not None:
             end_container_children = [
+                self.vinyl,
                 self.status_container,
                 self.system_tray,
                 self.date_time,

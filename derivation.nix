@@ -10,6 +10,8 @@
   gnome,
   cinnamon,
   wrapGAppsHook3,
+  playerctl,
+  webp-pixbuf-loader,
   ...
 }:
 
@@ -24,15 +26,19 @@ python3Packages.buildPythonApplication {
     wrapGAppsHook3
     gtk3
     gobject-introspection
+    python3Packages.pygobject3
     cairo
+    playerctl
   ];
-  # buildInputs = [
-  #   libdbusmenu-gtk3
-  #   gtk-layer-shell
-  #   gnome.gnome-bluetooth
-  #   cinnamon.cinnamon-desktop
-  #   gdk-pixbuf
-  # ];
+  buildInputs = [
+    libdbusmenu-gtk3
+    gtk-layer-shell
+    gnome.gnome-bluetooth
+    cinnamon.cinnamon-desktop
+    gdk-pixbuf
+    playerctl
+    webp-pixbuf-loader
+  ];
 
   dependencies = with python3Packages; [
     python-fabric
