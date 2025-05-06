@@ -1,21 +1,18 @@
 import os
-import threading
 import time
-from loguru import logger
 from dataclasses import dataclass, field
-from typing import Dict, List, Optional, Any, Set
+from typing import Any, Dict, List, Optional, Set
 
-from fabric.core.service import Service, Signal, Property
+from fabric.core.service import Property, Service, Signal
 from fabric.utils.helpers import idle_add
-
+from gi.repository import GLib
+from loguru import logger
 # Import pywayland components - ensure these imports are correct
 from pywayland.client import Display
 from pywayland.protocol.wayland import WlOutput, WlSeat
+
+from .generated.river_control_unstable_v1 import ZriverControlV1
 from .generated.river_status_unstable_v1 import ZriverStatusManagerV1
-from gi.repository import (
-    Gio,
-    GLib,
-)
 
 
 @dataclass
@@ -103,7 +100,6 @@ class River(Service):
                 "seat_status": None,
             }
 
-            # Set up registry handlers - using more direct approach like your example
             def handle_global(registry, name, iface, version):
                 logger.debug(
                     f"[RiverService] Global: {iface} (v{version}, name={name})"

@@ -16,17 +16,10 @@
 
 from __future__ import annotations
 
-from pywayland.protocol_core import (
-    Argument,
-    ArgumentType,
-    Global,
-    Interface,
-    Proxy,
-    Resource,
-)
+from pywayland.protocol.wayland import WlOutput, WlSeat
+from pywayland.protocol_core import (Argument, ArgumentType, Global, Interface,
+                                     Proxy, Resource)
 
-from pywayland.protocol.wayland import WlOutput
-from pywayland.protocol.wayland import WlSeat
 from .zriver_output_status_v1 import ZriverOutputStatusV1
 from .zriver_seat_status_v1 import ZriverSeatStatusV1
 

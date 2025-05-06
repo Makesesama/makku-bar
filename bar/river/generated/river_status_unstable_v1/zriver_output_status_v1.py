@@ -16,14 +16,8 @@
 
 from __future__ import annotations
 
-from pywayland.protocol_core import (
-    Argument,
-    ArgumentType,
-    Global,
-    Interface,
-    Proxy,
-    Resource,
-)
+from pywayland.protocol_core import (Argument, ArgumentType, Global, Interface,
+                                     Proxy, Resource)
 
 
 class ZriverOutputStatusV1(Interface):

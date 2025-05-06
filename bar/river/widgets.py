@@ -1,14 +1,13 @@
-from loguru import logger
 from fabric.core.service import Property
-from fabric.widgets.button import Button
+from fabric.utils.helpers import bulk_connect
 from fabric.widgets.box import Box
+from fabric.widgets.button import Button
 from fabric.widgets.eventbox import EventBox
 from fabric.widgets.label import Label
-from fabric.utils.helpers import bulk_connect
-from .service import River
-
-
 from gi.repository import Gdk
+from loguru import logger
+
+from .service import River
 
 _connection: River | None = None
 

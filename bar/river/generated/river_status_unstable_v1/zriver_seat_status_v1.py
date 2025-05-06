@@ -16,16 +16,9 @@
 
 from __future__ import annotations
 
-from pywayland.protocol_core import (
-    Argument,
-    ArgumentType,
-    Global,
-    Interface,
-    Proxy,
-    Resource,
-)
-
 from pywayland.protocol.wayland import WlOutput
+from pywayland.protocol_core import (Argument, ArgumentType, Global, Interface,
+                                     Proxy, Resource)
 
 
 class ZriverSeatStatusV1(Interface):
