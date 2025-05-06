@@ -16,10 +16,16 @@
 
 from __future__ import annotations
 
-from pywayland.protocol_core import (Argument, ArgumentType, Global, Interface,
-                                     Proxy, Resource)
+from pywayland.protocol_core import (
+    Argument,
+    ArgumentType,
+    Global,
+    Interface,
+    Proxy,
+    Resource,
+)
 
-from ..wayland import WlSeat
+from pywayland.protocol.wayland import WlSeat
 from .zriver_command_callback_v1 import ZriverCommandCallbackV1
 
 

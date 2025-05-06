@@ -7,6 +7,7 @@ from fabric.core.service import Property, Service, Signal
 from fabric.utils.helpers import idle_add
 from gi.repository import GLib
 from loguru import logger
+
 # Import pywayland components - ensure these imports are correct
 from pywayland.client import Display
 from pywayland.protocol.wayland import WlOutput, WlSeat
@@ -62,6 +63,7 @@ class River(Service):
         self._active_window_title = ""
         self.outputs: Dict[int, OutputInfo] = {}
         self.river_status_mgr = None
+        self.river_control = None
         self.seat = None
         self.seat_status = None
 
@@ -96,6 +98,7 @@ class River(Service):
                 "registry": registry,
                 "outputs": {},
                 "river_status_mgr": None,
+                "river_control": None,
                 "seat": None,
                 "seat_status": None,
             }
@@ -109,6 +112,11 @@ class River(Service):
                         name, ZriverStatusManagerV1, version
                     )
                     logger.info("[RiverService] Found river status manager")
+                elif iface == "zriver_control_v1":
+                    state["river_control"] = registry.bind(
+                        name, ZriverControlV1, version
+                    )
+                    logger.info("[RiverService] Found river control interface")
                 elif iface == "wl_output":
                     output = registry.bind(name, WlOutput, version)
                     state["outputs"][name] = OutputInfo(name=name, output=output)
@@ -142,6 +150,12 @@ class River(Service):
                 return
 
                 # Handle the window title updates through seat status
+
+            if not state["river_control"]:
+                logger.error(
+                    "[RiverService] River control interface not found - falling back to riverctl"
+                )
+                # You could still fall back to the old riverctl method here if needed
 
             def focused_view_handler(_, title):
                 logger.debug(f"[RiverService] Focused view title: {title}")
@@ -208,8 +222,10 @@ class River(Service):
             # Update our outputs dictionary
             self.outputs.update(state["outputs"])
             self.river_status_mgr = state["river_status_mgr"]
+            self.river_control = state["river_control"]
             self.seat = state["seat"]
             self.seat_status = state.get("seat_status")
+            self._display = display
 
             # Mark service as ready
             idle_add(self._set_ready)
@@ -279,8 +295,48 @@ class River(Service):
 
         return sorted(tags)
 
-    def run_command(self, command, *args):
+    def run_command(self, command, *args, callback=None):
         """Run a riverctl command"""
+        if not self.river_control or not self.seat:
+            logger.warning(
+                "[RiverService] River control or seat not available, falling back to riverctl"
+            )
+            return self._run_command_fallback(command, *args)
+
+        self.river_control.add_argument(command)
+        for arg in args:
+            self.river_control.add_argument(str(arg))
+
+        # Execute the command
+        command_callback = self.river_control.run_command(self.seat)
+
+        # Set up callback handlers
+        result = {"stdout": None, "stderr": None, "success": None}
+
+        def handle_success(_, output):
+            logger.debug(f"[RiverService] Command success: {output}")
+            result["stdout"] = output
+            result["success"] = True
+            if callback:
+                idle_add(lambda: callback(True, output, None))
+
+        def handle_failure(_, failure_message):
+            logger.debug(f"[RiverService] Command failure: {failure_message}")
+            result["stderr"] = failure_message
+            result["success"] = False
+            if callback:
+                idle_add(lambda: callback(False, None, failure_message))
+
+        command_callback.dispatcher["success"] = handle_success
+        command_callback.dispatcher["failure"] = handle_failure
+
+        if hasattr(self, "_display"):
+            self._display.flush()
+
+        return True
+
+    def _run_command_fallback(self, command, *args):
+        """Fallback to riverctl"""
         import subprocess
 
         cmd = ["riverctl", command] + [str(arg) for arg in args]
@@ -294,7 +350,7 @@ class River(Service):
             )
             return None
 
-    def toggle_focused_tag(self, tag):
+    def toggle_focused_tag(self, tag, callback=None):
         """Toggle a tag in the focused tags"""
         tag_mask = 1 << int(tag)
-        self.run_command("set-focused-tags", str(tag_mask))
+        self.run_command("set-focused-tags", str(tag_mask), callback=callback)
