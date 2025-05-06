@@ -12,6 +12,10 @@ from fabric.utils.helpers import idle_add
 from pywayland.client import Display
 from pywayland.protocol.wayland import WlOutput, WlSeat
 from .generated.river_status_unstable_v1 import ZriverStatusManagerV1
+from gi.repository import (
+    Gio,
+    GLib,
+)
 
 
 @dataclass
@@ -48,7 +52,7 @@ class River(Service):
         return self._active_window_title
 
     @Signal
-    def ready(self):
+    def ready_signal(self):
         return self.notify("ready")
 
     @Signal("event", flags="detailed")
@@ -65,18 +69,15 @@ class River(Service):
         self.seat_status = None
 
         # Start the connection in a separate thread
-        self.river_thread = threading.Thread(
-            target=self._river_connection_task, daemon=True, name="river-status-service"
+        self.river_thread = GLib.Thread.new(
+            "river-status-service", self._river_connection_task
         )
-        self.river_thread.start()
 
     def _river_connection_task(self):
         """Main thread that connects to River and listens for events"""
         try:
-            # Create a new display connection - THIS IS WHERE THE ERROR OCCURS
             logger.info("[RiverService] Starting connection to River")
 
-            # Let's add some more diagnostic info to help troubleshoot
             logger.debug(
                 f"[RiverService] XDG_RUNTIME_DIR={os.environ.get('XDG_RUNTIME_DIR', 'Not set')}"
             )
@@ -84,14 +85,7 @@ class River(Service):
                 f"[RiverService] WAYLAND_DISPLAY={os.environ.get('WAYLAND_DISPLAY', 'Not set')}"
             )
 
-            # Create the display connection
-            # with Display() as display:
-            #     registry = display.get_registry()
-            #     logger.debug("[RiverService] Registry obtained")
-
-            # Discover globals
-
-            display = Display("wayland-1")
+            display = Display()
             display.connect()
             logger.debug("[RiverService] Display connection created")
 
@@ -236,11 +230,13 @@ class River(Service):
 
             logger.error(traceback.format_exc())
 
+        return True
+
     def _set_ready(self):
         """Set the service as ready (called on main thread via idle_add)"""
         self._ready = True
         logger.info("[RiverService] Service ready")
-        self.ready.emit()
+        self.ready_signal.emit()
         return False  # Don't repeat
 
     def _emit_view_tags(self, output_id, tags):

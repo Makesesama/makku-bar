@@ -76,11 +76,15 @@ class RiverWorkspaceButton(Button):
 
 
 class RiverWorkspaces(EventBox):
-    def __init__(self, output_id=None, max_tags=9, **kwargs):
+    def __init__(self, output_id, river_service=None, max_tags=9, **kwargs):
         super().__init__(events="scroll")
-        self.service = get_river_connection()
         self._box = Box(**kwargs)
         self.children = self._box
+
+        if river_service:
+            self.river = river_service
+        else:
+            self.river = get_river_connection()
 
         # Store output_id as received
         self.output_id = output_id
@@ -94,33 +98,33 @@ class RiverWorkspaces(EventBox):
             self._box.add(btn)
 
         # Connect to service events
-        self.service.connect("event::focused_tags", self.on_focus_change_general)
-        self.service.connect("event::view_tags", self.on_view_change_general)
-        self.service.connect("event::urgent_tags", self.on_urgent_change_general)
-        self.service.connect("event::output_removed", self.on_output_removed)
+        self.river.connect("event::focused_tags", self.on_focus_change_general)
+        self.river.connect("event::view_tags", self.on_view_change_general)
+        self.river.connect("event::urgent_tags", self.on_urgent_change_general)
+        self.river.connect("event::output_removed", self.on_output_removed)
 
         # Initial setup when service is ready
-        if self.service.ready:
+        if self.river.ready:
             self.on_ready(None)
         else:
-            self.service.connect("event::ready", self.on_ready)
+            self.river.connect("event::ready", self.on_ready)
 
         self.connect("scroll-event", self.on_scroll)
 
     def on_ready(self, _):
         """Initialize widget state when service is ready"""
         logger.debug(
-            f"[RiverWorkspaces] Service ready, outputs: {list(self.service.outputs.keys())}"
+            f"[RiverWorkspaces] Service ready, outputs: {list(self.river.outputs.keys())}"
         )
 
         # If no output_id was specified, take the first one
-        if self.output_id is None and self.service.outputs:
-            self.output_id = next(iter(self.service.outputs.keys()))
+        if self.output_id is None and self.river.outputs:
+            self.output_id = next(iter(self.river.outputs.keys()))
             logger.info(f"[RiverWorkspaces] Selected output {self.output_id}")
 
         # Initialize state from selected output
-        if self.output_id is not None and self.output_id in self.service.outputs:
-            output_info = self.service.outputs[self.output_id]
+        if self.output_id is not None and self.output_id in self.river.outputs:
+            output_info = self.river.outputs[self.output_id]
 
             # Initialize buttons with current state
             # Access fields directly on the OutputInfo dataclass
@@ -196,13 +200,13 @@ class RiverWorkspaces(EventBox):
             logger.info(f"[RiverWorkspaces] Our output {self.output_id} was removed")
 
             # Try to find another output
-            if self.service.outputs:
-                self.output_id = next(iter(self.service.outputs.keys()))
+            if self.river.outputs:
+                self.output_id = next(iter(self.river.outputs.keys()))
                 logger.info(f"[RiverWorkspaces] Switching to output {self.output_id}")
 
                 # Update state for new output
-                if self.output_id in self.service.outputs:
-                    output_info = self.service.outputs[self.output_id]
+                if self.output_id in self.river.outputs:
+                    output_info = self.river.outputs[self.output_id]
                     # Access fields directly on the OutputInfo dataclass
                     focused_tags = output_info.tags_focused
                     view_tags = output_info.tags_view
@@ -214,41 +218,46 @@ class RiverWorkspaces(EventBox):
     def on_workspace_click(self, btn):
         """Handle workspace button click"""
         logger.info(f"[RiverWorkspaces] Clicked on workspace {btn.id}")
-        self.service.toggle_focused_tag(btn.id)
+        self.river.toggle_focused_tag(btn.id)
 
     def on_scroll(self, _, event):
         """Handle scroll events"""
         direction = event.direction
         if direction == Gdk.ScrollDirection.DOWN:
             logger.info("[RiverWorkspaces] Scroll down - focusing next view")
-            self.service.run_command("focus-view", "next")
+            self.river.run_command("focus-view", "next")
         elif direction == Gdk.ScrollDirection.UP:
             logger.info("[RiverWorkspaces] Scroll up - focusing previous view")
-            self.service.run_command("focus-view", "previous")
+            self.river.run_command("focus-view", "previous")
 
 
 class RiverActiveWindow(Label):
     """Widget to display the currently active window's title"""
 
-    def __init__(self, max_length=None, ellipsize="end", **kwargs):
+    def __init__(self, max_length=None, ellipsize="end", river_service=None, **kwargs):
         super().__init__(**kwargs)
-        self.service = get_river_connection()
+
+        if river_service:
+            self.river = river_service
+        else:
+            self.river = get_river_connection()
+
         self.max_length = max_length
         self.ellipsize = ellipsize
 
         # Set initial state
-        if self.service.ready:
+        if self.river.ready:
             self.on_ready(None)
         else:
-            self.service.connect("event::ready", self.on_ready)
+            self.river.connect("event::ready", self.on_ready)
 
         # Connect to active window changes
-        self.service.connect("event::active_window", self.on_active_window_changed)
+        self.river.connect("event::active_window", self.on_active_window_changed)
 
     def on_ready(self, _):
         """Initialize widget when service is ready"""
         logger.debug("[RiverActiveWindow] Service ready")
-        self.update_title(self.service.active_window)
+        self.update_title(self.river.active_window)
 
     def on_active_window_changed(self, _, event):
         """Update widget when active window changes"""

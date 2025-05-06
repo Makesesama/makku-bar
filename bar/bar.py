@@ -1,185 +1,56 @@
 # fabric bar.py example
 # https://github.com/Fabric-Development/fabric/blob/rewrite/examples/bar/bar.py
-import psutil
+from loguru import logger
+
 from fabric import Application
-from fabric.widgets.box import Box
-from fabric.widgets.label import Label
-from fabric.widgets.overlay import Overlay
-from fabric.widgets.eventbox import EventBox
-from fabric.widgets.datetime import DateTime
-from fabric.widgets.centerbox import CenterBox
 from fabric.system_tray.widgets import SystemTray
-from fabric.widgets.circularprogressbar import CircularProgressBar
 from fabric.widgets.wayland import WaylandWindow as Window
-from .river.widgets import RiverWorkspaces, RiverWorkspaceButton, RiverActiveWindow
+from .river.widgets import (
+    get_river_connection,
+)
 from fabric.utils import (
-    FormattedString,
-    bulk_replace,
-    invoke_repeater,
     get_relative_path,
 )
-from bar.modules.player import Player
-from bar.modules.vinyl import VinylButton
-
-AUDIO_WIDGET = True
-
-if AUDIO_WIDGET is True:
-    try:
-        from fabric.audio.service import Audio
-    except Exception as e:
-        print(e)
-        AUDIO_WIDGET = False
-
-
-class VolumeWidget(Box):
-    def __init__(self, **kwargs):
-        super().__init__(**kwargs)
-        self.audio = Audio()
-
-        self.progress_bar = CircularProgressBar(
-            name="volume-progress-bar", pie=True, size=24
-        )
-
-        self.event_box = EventBox(
-            events="scroll",
-            child=Overlay(
-                child=self.progress_bar,
-                overlays=Label(
-                    label="",
-                    style="margin: 0px 6px 0px 0px; font-size: 12px",  # to center the icon glyph
-                ),
-            ),
-        )
-
-        self.audio.connect("notify::speaker", self.on_speaker_changed)
-        self.event_box.connect("scroll-event", self.on_scroll)
-        self.add(self.event_box)
-
-    def on_scroll(self, _, event):
-        match event.direction:
-            case 0:
-                self.audio.speaker.volume += 8
-            case 1:
-                self.audio.speaker.volume -= 8
-        return
-
-    def on_speaker_changed(self, *_):
-        if not self.audio.speaker:
-            return
-        self.progress_bar.value = self.audio.speaker.volume / 100
-        self.audio.speaker.bind(
-            "volume", "value", self.progress_bar, lambda _, v: v / 100
-        )
-        return
-
-
-class StatusBar(Window):
-    def __init__(self, display: int, monitor: int = 1, with_system_tray: bool = False):
-        super().__init__(
-            name="bar",
-            layer="top",
-            anchor="left top right",
-            margin="0px 0px -2px 0px",
-            exclusivity="auto",
-            visible=False,
-            all_visible=False,
-            monitor=monitor,
-        )
-        self.workspaces = RiverWorkspaces(
-            display,
-            name="workspaces",
-            spacing=4,
-            buttons_factory=lambda ws_id: RiverWorkspaceButton(id=ws_id, label=None),
-        )
-        self.date_time = DateTime(name="date-time", formatters="%d %b - %H:%M")
-        self.system_tray = None
-        if with_system_tray:
-            self.system_tray = SystemTray(name="system-tray", spacing=4)
-
-        self.active_window = RiverActiveWindow(
-            name="active-window",
-            max_length=50,
-            style="color: #ffffff; font-size: 14px; font-weight: bold;",
-        )
-
-        self.ram_progress_bar = CircularProgressBar(
-            name="ram-progress-bar", pie=True, size=24
-        )
-        self.cpu_progress_bar = CircularProgressBar(
-            name="cpu-progress-bar", pie=True, size=24
-        )
-        self.progress_bars_overlay = Overlay(
-            child=self.ram_progress_bar,
-            overlays=[
-                self.cpu_progress_bar,
-                Label("", style="margin: 0px 6px 0px 0px; font-size: 12px"),
-            ],
-        )
-        self.player = Player()
-        self.vinyl = VinylButton()
-
-        self.status_container = Box(
-            name="widgets-container",
-            spacing=4,
-            orientation="h",
-            children=self.progress_bars_overlay,
-        )
-        self.status_container.add(VolumeWidget()) if AUDIO_WIDGET is True else None
-
-        end_container_children = [
-            self.vinyl,
-            self.status_container,
-            self.date_time,
-        ]
-
-        if self.system_tray is not None:
-            end_container_children = [
-                self.vinyl,
-                self.status_container,
-                self.system_tray,
-                self.date_time,
-            ]
-        self.children = CenterBox(
-            name="bar-inner",
-            start_children=Box(
-                name="start-container",
-                spacing=6,
-                orientation="h",
-                children=[
-                    Label(name="nixos-label", markup=""),
-                    self.workspaces,
-                ],
-            ),
-            center_children=Box(
-                name="center-container",
-                spacing=4,
-                orientation="h",
-                children=[self.active_window],
-            ),
-            end_children=Box(
-                name="end-container",
-                spacing=4,
-                orientation="h",
-                children=end_container_children,
-            ),
-        )
-
-        invoke_repeater(1000, self.update_progress_bars)
-
-        self.show_all()
-
-    def update_progress_bars(self):
-        self.ram_progress_bar.value = psutil.virtual_memory().percent / 100
-        self.cpu_progress_bar.value = psutil.cpu_percent() / 100
-        return True
+from .modules.bar import StatusBar
 
 
 def main():
-    bar = StatusBar(45)
-    bar_two = StatusBar(44, monitor=2, with_system_tray=True)
-    app = Application("bar", bar, bar_two)
-    app.set_stylesheet_from_file(get_relative_path("bar.css"))
+    tray = SystemTray(name="system-tray", spacing=4)
 
+    river = get_river_connection()
+
+    # Dummy window just to hold the event loop
+    dummy = Window(visible=False)
+
+    # Real bar windows will be added later
+    bar_windows = []
+
+    def spawn_bars():
+        logger.info("[Bar] Spawning bars after river ready")
+        outputs = river.outputs
+
+        if not outputs:
+            logger.warning("[Bar] No outputs found — skipping bar spawn")
+            return
+
+        output_ids = sorted(outputs.keys())
+
+        for i, output_id in enumerate(output_ids):
+            print("i", i)
+            print("output_id", output_id)
+            bar = StatusBar(display=output_id, tray=tray if i == 0 else None, monitor=i)
+            bar_windows.append(bar)
+
+        return False
+
+    if river.ready:
+        print("river ready", river._ready)
+        spawn_bars()
+    else:
+        river.connect("notify::ready", lambda sender, pspec: spawn_bars())
+
+    app = Application("bar", dummy)
+    app.set_stylesheet_from_file(get_relative_path("bar.css"))
     app.run()
 
 
