@@ -1,0 +1,28 @@
+:vars {
+    --background: #17181C;
+    --mid-bg: #1E1F24;
+    --light-bg: #26272B;
+    --dark-grey: #333438;
+    --light-grey: #8F9093;
+    --dark-fg: #B0B1B4;
+    --mid-fg: #CBCCCE;
+    --foreground: #E4E5E7;
+    
+    --pink: #FA3867;
+    --orange: #F3872F;
+    --gold: #FEBD16;
+    --lime: #3FD43B;
+    --turquoise: #47E7CE;
+    --blue: #53ADE1;
+    --violet: #AD60FF;
+    --red: #FC3F2C;
+    
+    --window-bg: alpha(var(--background), 0.9);
+    --module-bg: alpha(var(--mid-bg), 0.8);
+    --border-color: var(--light-bg);
+    --ws-active: var(--pink);
+    --ws-inactive: var(--blue);
+    --ws-empty: var(--dark-grey);
+    --ws-hover: var(--turquoise);
+    --ws-urgent: var(--red);
+}

@@ -1,0 +1,51 @@
+#bar-inner {
+    padding: 4px;
+    border-bottom: solid 2px;
+    border-color: var(--border-color);
+    background-color: var(--window-bg);
+    min-height: 28px;
+}
+
+#center-container {
+  color: var(--foreground);
+}
+
+.active-window {
+  color: var(--foreground);
+  font-weight: bold;
+}
+
+#cpu-progress-bar,
+#ram-progress-bar,
+#volume-progress-bar {
+    color: transparent;
+    background-color: transparent
+}
+
+#cpu-progress-bar {
+    border: solid 0px alpha(var(--violet), 0.8);
+}
+
+#ram-progress-bar,
+#volume-progress-bar {
+    border: solid 0px var(--blue);
+}
+
+#widgets-container {
+    background-color: var(--module-bg);
+    padding: 2px;
+}
+
+#nixos-label {
+    color: var(--blue);
+}
+
+tooltip {
+    border: solid 2px;
+    border-color: var(--border-color);
+    background-color: var(--window-bg);
+}
+
+tooltip>* {
+    padding: 2px 4px
+}

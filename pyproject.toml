@@ -15,10 +15,13 @@ readme = "README.md"
 license = {file = "LICENSE"}
 
 [project.scripts]
-bar = "bar.bar:main"
+bar = "bar.main:main"
+
+[tool.setuptools]
+include-package-data = true
 
 [tool.setuptools.packages.find]
 where = ["."]
 
 [tool.setuptools.package-data]
-bar = ["bar.css"]
+"*" = ["*.css", "styles"]

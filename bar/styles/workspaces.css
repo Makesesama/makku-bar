@@ -1,0 +1,42 @@
+#workspaces {
+    padding: 6px;
+    min-width: 0px;
+    background-color: var(--module-bg);
+}
+
+#workspaces>button {
+    padding: 0px 8px;
+    transition: padding 0.05s steps(8);
+    background-color: var(--foreground);
+    border-radius: 100px;
+}
+
+#workspaces>button>label {
+    font-size: 0px;
+}
+
+#workspaces button.hover {
+    background-color: var(--ws-hover);
+}
+
+#workspaces button.urgent {
+    background-color: var(--ws-urgent);
+    color: var(--foreground);
+    font-weight: bold;
+    animation: urgent-blink 1s infinite;
+}
+
+@keyframes urgent-blink {
+    0% { opacity: 1.0; }
+    50% { opacity: 0.5; }
+    100% { opacity: 1.0; }
+}
+
+#workspaces>button.empty {
+    background-color: var(--ws-empty);
+}
+
+#workspaces>button.active {
+    padding: 0px 32px;
+    background-color: var(--ws-active);
+}

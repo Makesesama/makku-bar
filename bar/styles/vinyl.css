@@ -1,0 +1,41 @@
+/* Vinyl button styling */
+#vinyl-button {
+    padding: 0px 8px;
+    transition: padding 0.05s steps(8);
+    background-color: rgba(180, 180, 180, 0.2);
+    border-radius: 4px;
+    transition: all 0.2s ease;
+}
+
+/* Active state styling */
+.active #vinyl-button {
+    background-color: rgba(108, 158, 175, 0.7);
+    padding: 0px 32px;
+}
+
+/* Icon styling */
+#vinyl-icon {
+    color: #555555;
+    min-width: 36px;
+}
+
+/* Label styling */
+#vinyl-label {
+    color: #333333;
+}
+
+/* Active state changes for icon and label */
+.active #vinyl-icon,
+.active #vinyl-label {
+    color: var(--pink);
+    padding: 0px 32px;
+}
+
+/* Hover effect */
+#vinyl-button:hover {
+    background-color: rgba(180, 180, 180, 0.4);
+}
+
+.active #vinyl-button:hover {
+    background-color: rgba(108, 158, 175, 0.9);
+}

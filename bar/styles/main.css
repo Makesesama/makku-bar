@@ -1,0 +1,25 @@
+/* Fabric bar.css
+ * https://github.com/Fabric-Development/fabric/blob/rewrite/examples/bar/bar.css
+ * Modified with Camellia Theme: https://github.com/camellia-theme/camellia
+ */
+/* we can use webcss variables, fabric compiles that to gtk css.
+   global variables can be stored in :vars */
+@import "./bar/styles/colors.css";
+@import "./bar/styles/workspaces.css";
+@import "./bar/styles/menu.css";
+@import "./bar/styles/vinyl.css";
+@import "./bar/styles/bar.css";
+
+
+/* unset so we can style everything from the ground up. */
+* {
+    all: unset;
+    color: var(--foreground);
+    font-size: 16px;
+    font-family: "Jost*", sans-serif;
+}
+
+button {
+    background-size: 400% 400%;
+}
+

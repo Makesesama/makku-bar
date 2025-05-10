@@ -16,13 +16,10 @@ from .modules.bar import StatusBar
 
 def main():
     tray = SystemTray(name="system-tray", spacing=4)
-
     river = get_river_connection()
 
-    # Dummy window just to hold the event loop
     dummy = Window(visible=False)
 
-    # Real bar windows will be added later
     bar_windows = []
 
     def spawn_bars():
@@ -50,7 +47,7 @@ def main():
         river.connect("notify::ready", lambda sender, pspec: spawn_bars())
 
     app = Application("bar", dummy)
-    app.set_stylesheet_from_file(get_relative_path("bar.css"))
+    app.set_stylesheet_from_file(get_relative_path("styles/main.css"))
     app.run()
 
 
