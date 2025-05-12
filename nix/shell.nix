@@ -22,8 +22,8 @@ pkgs.mkShell {
     gobject-introspection
     libdbusmenu-gtk3
     gdk-pixbuf
-    gnome.gnome-bluetooth
-    cinnamon.cinnamon-desktop
+    gnome-bluetooth
+    cinnamon-desktop
     wayland-scanner
     wayland
     wayland-protocols

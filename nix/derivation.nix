@@ -7,8 +7,8 @@
   gobject-introspection,
   libdbusmenu-gtk3,
   gdk-pixbuf,
-  gnome,
-  cinnamon,
+  gnome-bluetooth,
+  cinnamon-desktop,
   wrapGAppsHook3,
   playerctl,
   webp-pixbuf-loader,
@@ -33,8 +33,8 @@ python3Packages.buildPythonApplication {
   buildInputs = [
     libdbusmenu-gtk3
     gtk-layer-shell
-    gnome.gnome-bluetooth
-    cinnamon.cinnamon-desktop
+    gnome-bluetooth
+    cinnamon-desktop
     gdk-pixbuf
     playerctl
     webp-pixbuf-loader

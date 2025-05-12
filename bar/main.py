@@ -33,15 +33,12 @@ def main():
         output_ids = sorted(outputs.keys())
 
         for i, output_id in enumerate(output_ids):
-            print("i", i)
-            print("output_id", output_id)
             bar = StatusBar(display=output_id, tray=tray if i == 0 else None, monitor=i)
             bar_windows.append(bar)
 
         return False
 
     if river.ready:
-        print("river ready", river._ready)
         spawn_bars()
     else:
         river.connect("notify::ready", lambda sender, pspec: spawn_bars())
