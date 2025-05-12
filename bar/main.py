@@ -5,7 +5,7 @@ from loguru import logger
 from fabric import Application
 from fabric.system_tray.widgets import SystemTray
 from fabric.widgets.wayland import WaylandWindow as Window
-from .river.widgets import (
+from fabric.river.widgets import (
     get_river_connection,
 )
 from fabric.utils import (

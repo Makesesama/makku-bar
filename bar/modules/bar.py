@@ -8,7 +8,7 @@ from bar.modules.player import Player
 from bar.modules.vinyl import VinylButton
 from fabric.widgets.wayland import WaylandWindow as Window
 from fabric.system_tray.widgets import SystemTray
-from ..river.widgets import (
+from fabric.river.widgets import (
     RiverWorkspaces,
     RiverWorkspaceButton,
     RiverActiveWindow,
