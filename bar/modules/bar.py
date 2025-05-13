@@ -92,11 +92,11 @@ class StatusBar(Window):
         if self.vinyl:
             end_container_children.append(self.vinyl)
 
+        end_container_children.append(self.status_container)
         if self.system_tray:
             end_container_children.append(self.system_tray)
 
         end_container_children.append(self.date_time)
-        end_container_children.append(self.status_container)
 
         self.children = CenterBox(
             name="bar-inner",
