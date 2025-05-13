@@ -49,4 +49,4 @@ app_config = load_config() if not load_args() else load_config(load_args())
 if app_config is None:
     raise Exception("Config file missing")
 
-VINYL = app_config.get("vinyl", {"enabled": False})
+VINYL = app_config.get("vinyl", {"enable": False})

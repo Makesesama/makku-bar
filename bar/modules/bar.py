@@ -77,7 +77,7 @@ class StatusBar(Window):
         )
         self.player = Player()
         self.vinyl = None
-        if VINYL["enabled"]:
+        if VINYL["enable"]:
             self.vinyl = VinylButton()
 
         self.status_container = Box(
