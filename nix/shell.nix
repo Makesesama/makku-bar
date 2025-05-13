@@ -27,6 +27,8 @@ pkgs.mkShell {
     wayland-scanner
     wayland
     wayland-protocols
+    playerctl
+
     (python3.withPackages (
       ps: with ps; [
         setuptools
@@ -39,6 +41,8 @@ pkgs.mkShell {
         pylsp-mypy
         pyls-isort
         python-lsp-ruff
+        pyyaml
+        platformdirs
       ]
     ))
   ];

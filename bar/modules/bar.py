@@ -19,6 +19,8 @@ from fabric.utils import (
 )
 from fabric.widgets.circularprogressbar import CircularProgressBar
 
+from bar.config import VINYL
+
 
 class StatusBar(Window):
     def __init__(
@@ -74,7 +76,9 @@ class StatusBar(Window):
             overlays=[self.cpu_progress_bar, self.progress_label],
         )
         self.player = Player()
-        self.vinyl = VinylButton()
+        self.vinyl = None
+        if VINYL["enabled"]:
+            self.vinyl = VinylButton()
 
         self.status_container = Box(
             name="widgets-container",
@@ -83,15 +87,16 @@ class StatusBar(Window):
             children=self.progress_bars_overlay,
         )
 
-        end_container_children = [
-            self.vinyl,
-            self.status_container,
-        ]
+        end_container_children = []
+
+        if self.vinyl:
+            end_container_children.append(self.vinyl)
 
         if self.system_tray:
             end_container_children.append(self.system_tray)
 
         end_container_children.append(self.date_time)
+        end_container_children.append(self.status_container)
 
         self.children = CenterBox(
             name="bar-inner",

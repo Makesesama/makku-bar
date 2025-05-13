@@ -47,6 +47,11 @@
           pkgs,
           ...
         }:
+        let
+          cfg = config.services.makku-bar;
+
+          settingsFormat = pkgs.formats.yaml { };
+        in
         {
           options.services.makku-bar = {
             enable = lib.mkEnableOption "makku-bar status bar";
@@ -56,24 +61,41 @@
               default = self.packages.${pkgs.system}.default;
               description = "The makku-bar package to use.";
             };
+
+            settings = lib.mkOption {
+              type = lib.types.submodule {
+                options = {
+                  vinyl = {
+                    enable = lib.mkOption {
+                      type = lib.types.bool;
+                      default = false;
+                    };
+                  };
+                };
+              };
+            };
           };
 
           config = lib.mkIf config.services.makku-bar.enable {
-            systemd.user.services.makku-bar = {
-              Unit = {
-                Description = "Makku Status Bar";
-                After = [ "graphical-session.target" ];
-              };
+            systemd.user.services.makku-bar =
+              let
+                configFile = settingsFormat.generate "config.yaml" cfg.settings;
+              in
+              {
+                Unit = {
+                  Description = "Makku Status Bar";
+                  After = [ "graphical-session.target" ];
+                };
 
-              Service = {
-                ExecStart = "${config.services.makku-bar.package}/bin/bar";
-                Restart = "on-failure";
-              };
+                Service = {
+                  ExecStart = "${config.services.makku-bar.package}/bin/bar --config ${configFile}";
+                  Restart = "on-failure";
+                };
 
-              Install = {
-                WantedBy = [ "default.target" ];
+                Install = {
+                  WantedBy = [ "default.target" ];
+                };
               };
-            };
           };
         };
     };

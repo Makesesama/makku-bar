@@ -43,6 +43,8 @@ python3Packages.buildPythonApplication {
   dependencies = with python3Packages; [
     python-fabric
     pywayland
+    pyyaml
+    platformdirs
   ];
   doCheck = false;
   dontWrapGApps = true;
