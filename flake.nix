@@ -73,6 +73,9 @@
                   };
                 };
               };
+              default = {
+                vinyl.enable = false;
+              };
             };
           };
 
