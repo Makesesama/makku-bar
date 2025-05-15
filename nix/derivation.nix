@@ -49,6 +49,20 @@ python3Packages.buildPythonApplication {
   doCheck = false;
   dontWrapGApps = true;
 
+  installPhase = ''
+    runHook preInstall
+
+    mkdir -p $out/${python3Packages.python.sitePackages}
+    cp -r bar $out/${python3Packages.python.sitePackages}/
+
+    # If you have any scripts to install
+    mkdir -p $out/bin
+    cp scripts/launcher.py $out/bin/bar
+    chmod +x $out/bin/bar
+
+    runHook postInstall
+  '';
+
   preFixup = ''
     makeWrapperArgs+=("''${gappsWrapperArgs[@]}")
   '';
