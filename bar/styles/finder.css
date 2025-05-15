@@ -1,0 +1,29 @@
+#picker-box {
+    padding: 12px;
+    background-color: rgba(40, 40, 40, 0.95);  /* darker for contrast */
+    border-radius: 8px;
+    font-family: sans-serif;
+    font-size: 14px;
+    color: white;
+}
+
+
+#viewport {
+    padding: 8px;
+    background-color: rgba(30, 30, 30, 0.9); /* dark background for contrast */
+    border-radius: 6px;
+    font-family: sans-serif;
+    font-size: 14px;
+    color: white; /* ensure contrast */
+}
+
+#viewport > * {
+    padding: 6px 10px;
+    margin-bottom: 4px;
+    border-radius: 4px;
+    background-color: rgba(255, 255, 255, 0.05);
+}
+
+#viewport:hover {
+    background-color: rgba(255, 255, 255, 0.15); /* hover feedback */
+}

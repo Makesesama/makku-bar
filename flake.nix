@@ -32,7 +32,12 @@
       {
         formatter = pkgs.nixfmt-rfc-style;
         devShells.default = pkgs.callPackage ./nix/shell.nix { inherit pkgs; };
-        packages.default = pkgs.callPackage ./nix/derivation.nix { inherit (pkgs) lib python3Packages; };
+        packages = {
+          default = pkgs.callPackage ./nix/derivation.nix { inherit (pkgs) lib python3Packages; };
+          makku = pkgs.writeShellScriptBin "makku" ''
+            dbus-send --session --print-reply --dest=org.Fabric.fabric.bar  /org/Fabric/fabric org.Fabric.fabric.Evaluate string:"finder.show()" > /dev/null 2>&1
+          '';
+        };
         apps.default = {
           type = "app";
           program = "${self.packages.${system}.default}/bin/bar";
