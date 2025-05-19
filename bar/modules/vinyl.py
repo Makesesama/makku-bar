@@ -25,10 +25,14 @@ class VinylButton(Box):
 
     def __init__(
         self,
-        active_command="""pw-link alsa_input.pci-0000_12_00.6.analog-stereo:capture_FL alsa_output.usb-BEHRINGER_UMC1820_A71E9E3E-00.multichannel-output:playback_AUX0
-pw-link alsa_input.pci-0000_12_00.6.analog-stereo:capture_FR alsa_output.usb-BEHRINGER_UMC1820_A71E9E3E-00.multichannel-output:playback_AUX1""",
-        inactive_command="""pw-link -d alsa_input.pci-0000_12_00.6.analog-stereo:capture_FL alsa_output.usb-BEHRINGER_UMC1820_A71E9E3E-00.multichannel-output:playback_AUX0
-pw-link -d alsa_input.pci-0000_12_00.6.analog-stereo:capture_FR alsa_output.usb-BEHRINGER_UMC1820_A71E9E3E-00.multichannel-output:playback_AUX1 """,
+        active_command=[
+            "pw-link alsa_input.pci-0000_12_00.6.analog-stereo:capture_FL alsa_output.usb-BEHRINGER_UMC1820_A71E9E3E-00.multichannel-output:playback_AUX0",
+            "pw-link alsa_input.pci-0000_12_00.6.analog-stereo:capture_FR alsa_output.usb-BEHRINGER_UMC1820_A71E9E3E-00.multichannel-output:playback_AUX1",
+        ],
+        inactive_command=[
+            "pw-link -d alsa_input.pci-0000_12_00.6.analog-stereo:capture_FL alsa_output.usb-BEHRINGER_UMC1820_A71E9E3E-00.multichannel-output:playback_AUX0",
+            "pw-link -d alsa_input.pci-0000_12_00.6.analog-stereo:capture_FR alsa_output.usb-BEHRINGER_UMC1820_A71E9E3E-00.multichannel-output:playback_AUX1 ",
+        ],
         **kwargs,
     ):
         super().__init__(**kwargs)
@@ -80,13 +84,15 @@ pw-link -d alsa_input.pci-0000_12_00.6.analog-stereo:capture_FR alsa_output.usb-
     def _execute_active_command(self):
         """Execute shell command when button is activated"""
         try:
-            subprocess.Popen(self._active_command, shell=True)
+            for cmd in self._active_command:
+                subprocess.Popen(cmd, shell=True)
         except Exception as e:
             print(f"Error executing active command: {e}")
 
     def _execute_inactive_command(self):
         """Execute shell command when button is deactivated"""
         try:
-            subprocess.Popen(self._inactive_command, shell=True)
+            for cmd in self._inactive_command:
+                subprocess.Popen(cmd, shell=True)
         except Exception as e:
             print(f"Error executing inactive command: {e}")
