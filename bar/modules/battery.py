@@ -35,15 +35,10 @@ class Battery(Box):
         self.bat_provider = BatteryProvider()
 
         self.bat_icon = Image(
-            name="bat-icon",
-            icon_name="battery-full-symbolic",
-            icon_size=16
+            name="bat-icon", icon_name="battery-full-symbolic", icon_size=16
         )
 
-        self.bat_label = Label(
-            name="bat-label",
-            label="100%"
-        )
+        self.bat_label = Label(name="bat-label", label="100%")
 
         self.bat_fabricator = Fabricator(
             poll_from=lambda *_: self.bat_provider.get_battery(),
@@ -59,28 +54,13 @@ class Battery(Box):
         GLib.idle_add(self.update_battery, None, self.bat_provider.get_battery())
 
     def _icon_lookup(self, bat, charging):
+        # Round to nearest 10 for level-based icons
+        level = max(10, min(100, round(bat / 10) * 10))
+
         if charging:
-            if bat >= 100:
-                return "battery-full-charging-symbolic"
-            elif bat > 70:
-                return "battery-good-charging-symbolic"
-            elif bat > 40:
-                return "battery-medium-charging-symbolic"
-            elif bat > 20:
-                return "battery-low-charging-symbolic"
-            else:
-                return "battery-caution-charging-symbolic"
+            return f"battery-level-{level}-charging-symbolic"
         else:
-            if bat >= 100:
-                return "battery-full-symbolic"
-            elif bat > 70:
-                return "battery-good-symbolic"
-            elif bat > 40:
-                return "battery-medium-symbolic"
-            elif bat > 20:
-                return "battery-low-symbolic"
-            else:
-                return "battery-caution-symbolic"
+            return f"battery-level-{level}-symbolic"
 
     def update_battery(self, sender, battery_data):
         value, charging = battery_data
