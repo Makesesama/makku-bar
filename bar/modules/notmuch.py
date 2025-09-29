@@ -1,5 +1,9 @@
+import os
 import subprocess
 import shutil
+
+# Add common binary paths to PATH for user binaries
+os.environ['PATH'] = '/run/current-system/sw/bin:/home/' + os.environ.get('USER', 'user') + '/.nix-profile/bin:' + os.environ.get('PATH', '')
 from fabric.widgets.box import Box
 from fabric.widgets.label import Label
 from fabric.widgets.button import Button
