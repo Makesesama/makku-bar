@@ -9,5 +9,6 @@ with notmuch
 ## notch power bar
 - show the power around the notch
 - show watts charging/discharging in bar
+- https://lo.cafe/notchnook
 ## Screenshot menu
 ## Media Playing
