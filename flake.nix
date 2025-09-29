@@ -82,17 +82,25 @@
                       default = false;
                     };
                   };
-                  bar_height = lib.mkOption {
+                  height = lib.mkOption {
                     type = lib.types.int;
                     default = 40;
                     description = "Height of the status bar in pixels";
+                  };
+                  window_title = {
+                    enable = lib.mkOption {
+                      type = lib.types.bool;
+                      default = true;
+                      description = "Whether to show the window title in the center of the bar";
+                    };
                   };
                 };
               };
               default = {
                 vinyl.enable = false;
                 battery.enable = false;
-                bar_height = 40;
+                height = 40;
+                window_title.enable = true;
               };
             };
           };

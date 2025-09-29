@@ -20,7 +20,7 @@ from fabric.utils import (
 )
 from fabric.widgets.circularprogressbar import CircularProgressBar
 
-from bar.config import VINYL, BATTERY, BAR_HEIGHT
+from bar.config import VINYL, BATTERY, BAR_HEIGHT, WINDOW_TITLE
 
 
 class StatusBar(Window):
@@ -105,6 +105,10 @@ class StatusBar(Window):
 
         end_container_children.append(self.date_time)
 
+        center_children = []
+        if WINDOW_TITLE["enable"]:
+            center_children.append(self.active_window)
+
         self.children = CenterBox(
             name="bar-inner",
             start_children=Box(
@@ -120,7 +124,7 @@ class StatusBar(Window):
                 name="center-container",
                 spacing=4,
                 orientation="h",
-                children=[self.active_window],
+                children=center_children,
             ),
             end_children=Box(
                 name="end-container",
