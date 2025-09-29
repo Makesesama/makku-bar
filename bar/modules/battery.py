@@ -11,6 +11,7 @@ class BatteryProvider:
         self.bat_percent = 0.0
         self.bat_charging = None
 
+        self._update()
         GLib.timeout_add_seconds(1, self._update)
 
     def _update(self):
