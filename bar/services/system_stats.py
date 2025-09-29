@@ -31,6 +31,7 @@ class SystemStatsService(Service):
         """Stop monitoring system stats"""
         if self._timer_id is not None:
             from gi.repository import GLib
+
             GLib.source_remove(self._timer_id)
             self._timer_id = None
 

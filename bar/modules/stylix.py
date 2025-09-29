@@ -70,7 +70,7 @@ def generate_stylix_css():
 #battery-widget {{
     background-color: #{colors["base01"]};
     padding: 4px 8px;
-    border-radius: 4px;
+    border-radius: 12px;
 }}
 
 #bat-icon {{
@@ -109,6 +109,7 @@ def generate_stylix_css():
 #widgets-container {{
     background-color: #{colors["base01"]};
     padding: 2px;
+    border-radius: 16px;
 }}
 
 /* NixOS label */
@@ -121,7 +122,7 @@ def generate_stylix_css():
     color: #{colors["base05"]};
     background-color: #{colors["base01"]};
     padding: 4px 8px;
-    border-radius: 4px;
+    border-radius: 12px;
 }}
 
 /* Tooltips */
@@ -130,6 +131,7 @@ tooltip {{
     border-color: #{colors["base02"]};
     background-color: #{colors["base00"]};
     color: #{colors["base05"]};
+    border-radius: 16px;
 }}
 
 tooltip>* {{
@@ -139,13 +141,21 @@ tooltip>* {{
 /* Workspaces */
 #workspaces {{
     background-color: #{colors["base01"]};
+    padding: 6px 6px;
+    border-radius: 16px;
 }}
 
 #workspaces>button {{
     background-color: #{colors["base05"]};
     border-radius: 100px;
-    padding: 0px 8px;
+    padding: 0px 4px;
     transition: padding 0.05s steps(8);
+}}
+
+#workspaces>button.active {{
+    background-color: #{colors["base0D"]};
+    padding: 0px 12px;
+    border-radius: 100px;
 }}
 
 #workspaces>button>label {{
@@ -156,20 +166,15 @@ tooltip>* {{
     background-color: #{colors["base03"]};
 }}
 
-#workspaces>button.active {{
-    background-color: #{colors["base0D"]};
-    padding: 0px 32px;
-}}
-
 #workspaces>button.urgent {{
     background-color: #{colors["base08"]};
 }}
 """
 
     # Write to temporary file
-    temp_fd, temp_path = tempfile.mkstemp(suffix='.css', prefix='stylix_')
+    temp_fd, temp_path = tempfile.mkstemp(suffix=".css", prefix="stylix_")
     try:
-        with os.fdopen(temp_fd, 'w') as f:
+        with os.fdopen(temp_fd, "w") as f:
             f.write(css_content)
         return temp_path
     except Exception:
