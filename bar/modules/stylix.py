@@ -40,23 +40,8 @@ def generate_stylix_css():
     font_family = fonts.get("sansSerif", "sans-serif")
     font_size = fonts.get("sizes", {}).get("applications", 14)
 
-    css_content = f"""
-/* Stylix-generated colors */
-:root {{
-    --window-bg: #{colors["base00"]};
-    --module-bg: #{colors["base01"]};
-    --border-color: #{colors["base02"]};
-    --foreground: #{colors["base05"]};
-    --red: #{colors["base08"]};
-    --orange: #{colors["base09"]};
-    --yellow: #{colors["base0A"]};
-    --green: #{colors["base0B"]};
-    --cyan: #{colors["base0C"]};
-    --blue: #{colors["base0D"]};
-    --violet: #{colors["base0E"]};
-    --purple: #{colors["base0E"]};
-    --brown: #{colors["base0F"]};
-}}
+    # Generate GTK CSS with Stylix colors
+    css_content = f"""/* Stylix-generated theme */
 
 /* Apply Stylix font */
 * {{
@@ -64,36 +49,71 @@ def generate_stylix_css():
     font-size: {font_size}px;
 }}
 
-/* Workspace styling */
-.workspace-button {{
-    background-color: #{colors["base01"]};
-    color: #{colors["base05"]};
-    border: 1px solid #{colors["base02"]};
-    border-radius: 4px;
-    padding: 4px 8px;
-    margin: 2px;
-}}
-
-.workspace-button.active {{
-    background-color: #{colors["base0D"]};
-    color: #{colors["base00"]};
-}}
-
-.workspace-button.urgent {{
-    background-color: #{colors["base08"]};
-    color: #{colors["base00"]};
-}}
-
 /* Bar styling */
 #bar-inner {{
+    padding: 4px;
+    border-bottom: solid 2px;
+    border-color: #{colors["base02"]};
     background-color: #{colors["base00"]};
-    border-bottom: 2px solid #{colors["base02"]};
 }}
 
-/* System tray */
-#system-tray {{
+#center-container {{
+    color: #{colors["base05"]};
+}}
+
+.active-window {{
+    color: #{colors["base05"]};
+    font-weight: bold;
+}}
+
+/* Battery */
+#battery-widget {{
     background-color: #{colors["base01"]};
+    padding: 4px 8px;
     border-radius: 4px;
+}}
+
+#bat-icon {{
+    color: #{colors["base0D"]};
+    margin-right: 2px;
+}}
+
+#bat-label {{
+    color: #{colors["base05"]};
+    font-size: 14px;
+}}
+
+#bat-label.battery-low {{
+    color: #{colors["base08"]};
+    font-weight: bold;
+}}
+
+/* Progress bars */
+#cpu-progress-bar,
+#ram-progress-bar,
+#volume-progress-bar {{
+    color: transparent;
+    background-color: transparent;
+}}
+
+#cpu-progress-bar {{
+    border: solid 0px alpha(#{colors["base0E"]}, 0.8);
+}}
+
+#ram-progress-bar,
+#volume-progress-bar {{
+    border: solid 0px #{colors["base0D"]};
+}}
+
+/* Widgets container */
+#widgets-container {{
+    background-color: #{colors["base01"]};
+    padding: 2px;
+}}
+
+/* NixOS label */
+#nixos-label {{
+    color: #{colors["base0D"]};
 }}
 
 /* Date time */
@@ -104,55 +124,36 @@ def generate_stylix_css():
     border-radius: 4px;
 }}
 
-/* Progress bars */
-#cpu-progress-bar {{
-    color: #{colors["base0E"]};
-}}
-
-#ram-progress-bar,
-#volume-progress-bar {{
-    color: #{colors["base0D"]};
-}}
-
-/* Battery */
-#battery-widget {{
-    background-color: #{colors["base01"]};
-    border-radius: 4px;
-}}
-
-#bat-icon {{
-    color: #{colors["base0D"]};
-}}
-
-#bat-label {{
-    color: #{colors["base05"]};
-}}
-
-#bat-label.battery-low {{
-    color: #{colors["base08"]};
-}}
-
-/* Active window */
-.active-window {{
-    color: #{colors["base05"]};
-}}
-
-/* NixOS label */
-#nixos-label {{
-    color: #{colors["base0D"]};
-}}
-
-/* Widgets container */
-#widgets-container {{
-    background-color: #{colors["base01"]};
-    border-radius: 4px;
-}}
-
-/* Tooltip */
+/* Tooltips */
 tooltip {{
+    border: solid 2px;
+    border-color: #{colors["base02"]};
     background-color: #{colors["base00"]};
-    border: 2px solid #{colors["base02"]};
     color: #{colors["base05"]};
+}}
+
+tooltip>* {{
+    padding: 2px 4px;
+}}
+
+/* Workspaces */
+.workspace {{
+    background-color: #{colors["base01"]};
+    border: 1px solid #{colors["base02"]};
+    border-radius: 4px;
+    color: #{colors["base05"]};
+    padding: 2px 8px;
+    margin: 0 2px;
+}}
+
+.workspace.active {{
+    background-color: #{colors["base0D"]};
+    color: #{colors["base00"]};
+}}
+
+.workspace.urgent {{
+    background-color: #{colors["base08"]};
+    color: #{colors["base00"]};
 }}
 """
 

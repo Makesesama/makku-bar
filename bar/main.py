@@ -30,9 +30,10 @@ if STYLIX.get("enable", False):
     stylix_css_path = get_stylix_css_path()
     if stylix_css_path:
         logger.info("[Bar] Using Stylix CSS")
-        app.set_stylesheet_from_file(stylix_css_path)
-        # Also load base styles for imports
+        # Load base styles first for structure
         app.set_stylesheet_from_file(get_relative_path("styles/main.css"))
+        # Then apply Stylix theme colors
+        app.set_stylesheet_from_file(stylix_css_path)
     else:
         logger.warning("[Bar] Stylix enabled but CSS generation failed, falling back to default")
         app.set_stylesheet_from_file(get_relative_path("styles/main.css"))
