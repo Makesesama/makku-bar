@@ -154,7 +154,7 @@ tooltip>* {{
 
 #workspaces>button.active {{
     background-color: #{colors["base0D"]};
-    padding: 0px 12px;
+    padding: 0px 16px;
     border-radius: 100px;
 }}
 
@@ -162,7 +162,7 @@ tooltip>* {{
     font-size: 0px;
 }}
 
-#workspaces>button.empty {{
+#workspaces>button.empty:not(.active) {{
     background-color: #{colors["base03"]};
 }}
 
