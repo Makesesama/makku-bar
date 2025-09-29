@@ -51,3 +51,4 @@ if app_config is None:
 
 VINYL = app_config.get("vinyl", {"enable": False})
 BATTERY = app_config.get("battery", {"enable": False})
+BAR_HEIGHT = app_config.get("bar_height", 40)

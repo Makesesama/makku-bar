@@ -20,7 +20,7 @@ from fabric.utils import (
 )
 from fabric.widgets.circularprogressbar import CircularProgressBar
 
-from bar.config import VINYL, BATTERY
+from bar.config import VINYL, BATTERY, BAR_HEIGHT
 
 
 class StatusBar(Window):
@@ -131,6 +131,9 @@ class StatusBar(Window):
         )
 
         invoke_repeater(1000, self.update_progress_bars)
+
+        # Set the bar height
+        self.set_size_request(-1, BAR_HEIGHT)
 
         self.show_all()
 

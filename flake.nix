@@ -82,11 +82,17 @@
                       default = false;
                     };
                   };
+                  bar_height = lib.mkOption {
+                    type = lib.types.int;
+                    default = 40;
+                    description = "Height of the status bar in pixels";
+                  };
                 };
               };
               default = {
                 vinyl.enable = false;
                 battery.enable = false;
+                bar_height = 40;
               };
             };
           };
