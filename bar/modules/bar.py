@@ -84,7 +84,6 @@ class StatusBar(Window):
         self.battery = None
         if BATTERY["enable"]:
             self.battery = Battery()
-        print(self.battery)
         self.status_container = Box(
             name="widgets-container",
             spacing=4,

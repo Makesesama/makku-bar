@@ -45,7 +45,7 @@ class Battery(Box):
         )
 
         self.bat_fabricator = Fabricator(
-            poll_from=lambda: self.bat_provider.get_battery(),
+            poll_from=lambda *_: self.bat_provider.get_battery(),
             on_changed=self.update_battery,
             interval=1000,
             stream=False,
@@ -90,10 +90,10 @@ class Battery(Box):
         self.bat_label.set_text(f"{int(value)}%")
 
         if value < 20 and not charging:
-            self.bat_label.add_css_class("battery-low")
-            self.bat_icon.add_css_class("battery-low")
+            self.bat_label.add_style_class("battery-low")
+            self.bat_icon.add_style_class("battery-low")
         else:
-            self.bat_label.remove_css_class("battery-low")
-            self.bat_icon.remove_css_class("battery-low")
+            self.bat_label.remove_style_class("battery-low")
+            self.bat_icon.remove_style_class("battery-low")
 
         return True
