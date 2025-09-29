@@ -35,13 +35,19 @@ class CalendarService:
         """Start periodic event updates"""
         if self._timer_id is None:
             from fabric.utils import invoke_repeater
-            self._timer_id = invoke_repeater(self._update_interval, self._periodic_update)
-            logger.info(f"[Calendar] Started periodic updates every {self._update_interval/1000/60:.1f} minutes")
+
+            self._timer_id = invoke_repeater(
+                self._update_interval, self._periodic_update
+            )
+            logger.info(
+                f"[Calendar] Started periodic updates every {self._update_interval/1000/60:.1f} minutes"
+            )
 
     def stop_monitoring(self):
         """Stop periodic event updates"""
         if self._timer_id is not None:
             from gi.repository import GLib
+
             GLib.source_remove(self._timer_id)
             self._timer_id = None
             logger.info("[Calendar] Stopped periodic updates")
@@ -60,14 +66,26 @@ class CalendarService:
         """Fetch today's events from khal"""
         try:
             result = subprocess.run(
-                ["khal", "list", "--json", "title", "--json", "start", "--json", "end", "--json", "location", "today"],
+                [
+                    "khal",
+                    "list",
+                    "--json",
+                    "title",
+                    "--json",
+                    "start",
+                    "--json",
+                    "end",
+                    "--json",
+                    "location",
+                    "today",
+                ],
                 capture_output=True,
                 text=True,
-                check=True
+                check=True,
             )
 
             if result.stdout.strip():
-                lines = result.stdout.strip().split('\n')
+                lines = result.stdout.strip().split("\n")
                 all_events = []
 
                 for line in lines:
@@ -87,9 +105,15 @@ class CalendarService:
                 upcoming_events = []
 
                 for event in all_events:
-                    event_date = event.get("start", "").split()[0] if event.get("start") else ""
-                    event_start_time = event.get("start", "").split()[1] if event.get("start") else ""
-                    event_end_time = event.get("end", "").split()[1] if event.get("end") else ""
+                    event_date = (
+                        event.get("start", "").split()[0] if event.get("start") else ""
+                    )
+                    event_start_time = (
+                        event.get("start", "").split()[1] if event.get("start") else ""
+                    )
+                    event_end_time = (
+                        event.get("end", "").split()[1] if event.get("end") else ""
+                    )
 
                     # Only process events from today
                     if event_date == current_date:
@@ -111,7 +135,9 @@ class CalendarService:
                 self.events = selected_past + selected_upcoming
                 logger.info(f"[Calendar] Found {len(self.events)} upcoming events")
                 for i, event in enumerate(self.events):
-                    logger.info(f"[Calendar] Event {i+1}: {event.get('title', 'No title')} at {event.get('start', 'No time')}")
+                    logger.info(
+                        f"[Calendar] Event {i+1}: {event.get('title', 'No title')} at {event.get('start', 'No time')}"
+                    )
                 self.emit_events_changed(self.events)
 
         except subprocess.CalledProcessError as e:
@@ -128,37 +154,33 @@ class CalendarPopup(Window):
             name="calendar-popup",
             layer="top",
             anchor="top right",
-            margin="40px 10px 0px 0px",
+            margin="10px 10px 0px 0px",  # Just a few pixels under the bar
             exclusivity="none",
             visible=False,
             all_visible=False,
-            **kwargs
+            **kwargs,
         )
+
 
         # Events container
         self.events_box = Box(
             name="events-box",
             orientation="v",
-            spacing=4,
-            style="min-width: 300px; min-height: 100px;"
+            spacing=6,
+            style="min-width: 450px; min-height: 200px;",
         )
 
         # Add a test label to make sure popup is working
-        test_label = Label(
-            "Calendar Events",
-            name="calendar-title"
-        )
+        test_label = Label("Calendar Events", name="calendar-title")
 
         container = Box(
-            orientation="v",
-            spacing=4,
-            children=[test_label, self.events_box]
+            orientation="v", spacing=4, children=[test_label, self.events_box]
         )
 
         self.children = container
 
-        # Set explicit size
-        self.set_size_request(320, 200)
+        # Set explicit size - much bigger
+        self.set_size_request(500, 400)
 
     def update_events_display(self, events):
         """Update the events display"""
@@ -169,10 +191,7 @@ class CalendarPopup(Window):
 
         if not events:
             logger.info("[Calendar] No events, showing 'no events' message")
-            no_events_label = Label(
-                "No upcoming events today",
-                name="no-events"
-            )
+            no_events_label = Label("No upcoming events today", name="no-events")
             self.events_box.add(no_events_label)
             return
 
@@ -197,15 +216,33 @@ class CalendarPopup(Window):
             elif start_time:
                 time_str = start_time
 
-            logger.info(f"[Calendar] Creating widget for: {title} ({time_str}) - {'Past' if is_past else 'Upcoming'}")
+            logger.info(
+                f"[Calendar] Creating widget for: {title} ({time_str}) - {'Past' if is_past else 'Upcoming'}"
+            )
 
-            # Create event item with CSS classes for theming
+            # Create event item with horizontal layout - time on left, content on right
             event_status = "past" if is_past else "upcoming"
             event_box = Box(
                 name="event-item",
+                orientation="h",  # Horizontal layout
+                spacing=12,
+                style_classes=[f"event-item", event_status],
+            )
+
+            # Left side: Time display (fixed width for alignment)
+            time_display = time_str if time_str else "All day"
+            time_label = Label(
+                time_display,
+                name="event-time",
+                style_classes=["event-time", event_status],
+                style="min-width: 100px;"  # Fixed width for consistent alignment
+            )
+
+            # Right side: Content (title and location)
+            content_box = Box(
+                name="event-content",
                 orientation="v",
-                spacing=2,
-                style_classes=[f"event-item", event_status]
+                spacing=2
             )
 
             # Title with status prefix
@@ -213,25 +250,21 @@ class CalendarPopup(Window):
             title_label = Label(
                 f"{title_prefix}{title}",
                 name="event-title",
-                style_classes=["event-title", event_status]
+                style_classes=["event-title", event_status],
             )
-            event_box.add(title_label)
-
-            if time_str:
-                time_label = Label(
-                    time_str,
-                    name="event-time",
-                    style_classes=["event-time", event_status]
-                )
-                event_box.add(time_label)
+            content_box.add(title_label)
 
             if location:
                 location_label = Label(
                     f"📍 {location}",
                     name="event-location",
-                    style_classes=["event-location", event_status]
+                    style_classes=["event-location", event_status],
                 )
-                event_box.add(location_label)
+                content_box.add(location_label)
+
+            # Add time and content to the main event box
+            event_box.add(time_label)
+            event_box.add(content_box)
 
             self.events_box.add(event_box)
             logger.info(f"[Calendar] Added event widget to events_box")
@@ -247,7 +280,7 @@ class CalendarWidget(Button):
             name="calendar-widget",
             child=Image(icon_name="x-office-calendar-symbolic", icon_size=16),
             on_clicked=self.toggle_events,
-            **kwargs
+            **kwargs,
         )
 
         self.service = CalendarService()

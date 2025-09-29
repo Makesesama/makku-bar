@@ -147,7 +147,20 @@ def generate_stylix_css():
 #calendar-popup {{
     background-color: #{colors["base00"]};
     border: solid 2px #{colors["base02"]};
-    border-radius: 8px;
+    border-radius: 12px;
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+    animation: slide-down 200ms ease-out;
+}}
+
+@keyframes slide-down {{
+    from {{
+        opacity: 0;
+        margin-top: -20px;
+    }}
+    to {{
+        opacity: 1;
+        margin-top: 10px;
+    }}
 }}
 
 #calendar-title {{
@@ -161,7 +174,7 @@ def generate_stylix_css():
     background-color: #{colors["base00"]};
     border: solid 1px #{colors["base02"]};
     border-radius: 8px;
-    padding: 12px;
+    padding: 16px;
 }}
 
 #no-events {{
@@ -170,9 +183,14 @@ def generate_stylix_css():
 
 /* Calendar event items */
 .event-item {{
-    border-radius: 4px;
-    padding: 6px;
-    margin: 2px 0px;
+    border-radius: 6px;
+    padding: 8px 12px;
+    margin: 4px 0px;
+    transition: background-color 0.15s ease;
+}}
+
+#event-content {{
+    margin-left: 8px;
 }}
 
 .event-item.upcoming {{
