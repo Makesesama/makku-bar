@@ -2,7 +2,7 @@ import psutil
 from gi.repository import GLib
 from fabric.widgets.box import Box
 from fabric.widgets.label import Label
-from fabric.widgets.icon import Icon
+from fabric.widgets.image import Image
 from fabric import Fabricator
 
 
@@ -33,11 +33,12 @@ class Battery(Box):
         super().__init__(name="battery-widget", orientation="h", spacing=4, **kwargs)
         self.bat_provider = BatteryProvider()
 
-        self.bat_icon = Icon(
+        self.bat_icon = Image(
             name="bat-icon",
             icon_name="battery-full-symbolic",
             icon_size=16
         )
+
         self.bat_label = Label(
             name="bat-label",
             label="100%"
@@ -58,16 +59,27 @@ class Battery(Box):
 
     def _icon_lookup(self, bat, charging):
         if charging:
-            return "battery-charging-symbolic"
-        match bat:
-            case _ if bat > 90:
+            if bat >= 100:
+                return "battery-full-charging-symbolic"
+            elif bat > 70:
+                return "battery-good-charging-symbolic"
+            elif bat > 40:
+                return "battery-medium-charging-symbolic"
+            elif bat > 20:
+                return "battery-low-charging-symbolic"
+            else:
+                return "battery-caution-charging-symbolic"
+        else:
+            if bat >= 100:
                 return "battery-full-symbolic"
-            case _ if bat > 50:
+            elif bat > 70:
                 return "battery-good-symbolic"
-            case _ if bat >= 20:
+            elif bat > 40:
                 return "battery-medium-symbolic"
-            case _:
+            elif bat > 20:
                 return "battery-low-symbolic"
+            else:
+                return "battery-caution-symbolic"
 
     def update_battery(self, sender, battery_data):
         value, charging = battery_data
@@ -79,7 +91,9 @@ class Battery(Box):
 
         if value < 20 and not charging:
             self.bat_label.add_css_class("battery-low")
+            self.bat_icon.add_css_class("battery-low")
         else:
             self.bat_label.remove_css_class("battery-low")
+            self.bat_icon.remove_css_class("battery-low")
 
         return True
