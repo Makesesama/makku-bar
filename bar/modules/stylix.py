@@ -38,7 +38,17 @@ def generate_stylix_css():
 
     # Default font
     font_family = fonts.get("sansSerif", "sans-serif")
-    font_size = fonts.get("sizes", {}).get("applications", 14)
+    font_sizes = fonts.get("sizes", {})
+    # Use desktop font size for the bar, fallback to applications, then default
+    font_size = font_sizes.get("desktop", font_sizes.get("applications", 14))
+
+    # Calculate relative font sizes
+    small_font = max(int(font_size * 0.85), 10)  # Minimum 10px
+    large_font = int(font_size * 1.1)
+
+    # Debug logging
+    from loguru import logger
+    logger.info(f"[Stylix] Using font sizes - Base: {font_size}px, Small: {small_font}px, Large: {large_font}px")
 
     # Generate GTK CSS with Stylix colors
     css_content = f"""/* Stylix-generated theme */
@@ -80,7 +90,7 @@ def generate_stylix_css():
 
 #bat-label {{
     color: #{colors["base05"]};
-    font-size: 14px;
+    font-size: {font_size}px;
 }}
 
 #bat-label.battery-low {{
@@ -143,6 +153,7 @@ def generate_stylix_css():
 #calendar-title {{
     color: #{colors["base05"]};
     font-weight: bold;
+    font-size: {large_font}px;
     margin-bottom: 8px;
 }}
 
@@ -175,7 +186,7 @@ def generate_stylix_css():
 
 .event-title {{
     font-weight: bold;
-    font-size: 12px;
+    font-size: {font_size}px;
 }}
 
 .event-title.upcoming {{
@@ -187,7 +198,7 @@ def generate_stylix_css():
 }}
 
 .event-time {{
-    font-size: 11px;
+    font-size: {small_font}px;
 }}
 
 .event-time.upcoming {{
@@ -199,7 +210,7 @@ def generate_stylix_css():
 }}
 
 .event-location {{
-    font-size: 11px;
+    font-size: {small_font}px;
 }}
 
 .event-location.upcoming {{
