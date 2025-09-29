@@ -76,10 +76,17 @@
                       default = false;
                     };
                   };
+                  battery = {
+                    enable = lib.mkOption {
+                      type = lib.types.bool;
+                      default = false;
+                    };
+                  };
                 };
               };
               default = {
                 vinyl.enable = false;
+                battery.enable = false;
               };
             };
           };

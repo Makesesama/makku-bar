@@ -50,3 +50,4 @@ if app_config is None:
     raise Exception("Config file missing")
 
 VINYL = app_config.get("vinyl", {"enable": False})
+BATTERY = app_config.get("battery", {"enable": False})

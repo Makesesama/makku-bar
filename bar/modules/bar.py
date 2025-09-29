@@ -6,6 +6,7 @@ from fabric.widgets.datetime import DateTime
 from fabric.widgets.centerbox import CenterBox
 from bar.modules.player import Player
 from bar.modules.vinyl import VinylButton
+from bar.modules.battery import Battery
 from fabric.widgets.wayland import WaylandWindow as Window
 from fabric.system_tray.widgets import SystemTray
 from fabric.river.widgets import (
@@ -19,7 +20,7 @@ from fabric.utils import (
 )
 from fabric.widgets.circularprogressbar import CircularProgressBar
 
-from bar.config import VINYL
+from bar.config import VINYL, BATTERY
 
 
 class StatusBar(Window):
@@ -80,6 +81,10 @@ class StatusBar(Window):
         if VINYL["enable"]:
             self.vinyl = VinylButton()
 
+        self.battery = None
+        if BATTERY["enable"]:
+            self.battery = Battery()
+        print(self.battery)
         self.status_container = Box(
             name="widgets-container",
             spacing=4,
@@ -91,6 +96,9 @@ class StatusBar(Window):
 
         if self.vinyl:
             end_container_children.append(self.vinyl)
+
+        if self.battery:
+            end_container_children.append(self.battery)
 
         end_container_children.append(self.status_container)
         if self.system_tray:

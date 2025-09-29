@@ -15,6 +15,27 @@
   font-weight: bold;
 }
 
+#battery-widget {
+    background-color: var(--module-bg);
+    padding: 4px 8px;
+    border-radius: 4px;
+}
+
+#bat-icon {
+    color: var(--blue);
+    margin-right: 2px;
+}
+
+#bat-label {
+    color: var(--foreground);
+    font-size: 14px;
+}
+
+#bat-label.battery-low {
+    color: var(--red);
+    font-weight: bold;
+}
+
 #cpu-progress-bar,
 #ram-progress-bar,
 #volume-progress-bar {

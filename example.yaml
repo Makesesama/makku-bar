@@ -1,2 +1,4 @@
 vinyl:
-    enabled: true
+    enable: true
+battery:
+    enable: true
