@@ -15,10 +15,8 @@ from fabric.river.widgets import (
     RiverActiveWindow,
     get_river_connection,
 )
-from fabric.utils import (
-    invoke_repeater,
-)
 from fabric.widgets.circularprogressbar import CircularProgressBar
+from bar.services.system_stats import SystemStatsService
 
 from bar.config import VINYL, BATTERY, BAR_HEIGHT, WINDOW_TITLE
 
@@ -134,14 +132,16 @@ class StatusBar(Window):
             ),
         )
 
-        invoke_repeater(1000, self.update_progress_bars)
+        # Create system stats service with signal-based updates
+        self.system_stats_service = SystemStatsService(update_interval=3000)
+        self.system_stats_service.connect("stats-changed", self.update_progress_bars)
 
         # Set the bar height
         self.set_size_request(-1, BAR_HEIGHT)
 
         self.show_all()
 
-    def update_progress_bars(self):
-        self.ram_progress_bar.value = psutil.virtual_memory().percent / 100
-        self.cpu_progress_bar.value = psutil.cpu_percent() / 100
-        return True
+    def update_progress_bars(self, service, cpu_percent, memory_percent):
+        """Update progress bars when system stats change"""
+        self.cpu_progress_bar.value = cpu_percent
+        self.ram_progress_bar.value = memory_percent

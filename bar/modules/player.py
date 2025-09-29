@@ -13,8 +13,27 @@ from fabric.widgets.stack import Stack
 from ..widgets.circle_image import CircleImage
 import bar.modules.icons as icons
 from bar.services.mpris import MprisPlayerManager, MprisPlayer
+from fabric import Fabricator
 
 # from bar.modules.cavalcade import SpectrumRender
+
+
+def get_player_progress(fabricator, mpris_player):
+    """Get player progress for Fabricator"""
+    if not mpris_player:
+        return (0, 0, 0.0)
+
+    try:
+        current = mpris_player.position
+    except Exception:
+        current = 0
+    try:
+        total = int(mpris_player.length or 0)
+    except Exception:
+        total = 0
+
+    progress = current / total if total > 0 else 0.0
+    return (current, total, progress)
 
 
 def get_player_icon_markup_by_name(player_name):
