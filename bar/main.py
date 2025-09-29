@@ -11,6 +11,8 @@ from fabric.utils import (
 )
 from .modules.bar import StatusBar
 from .modules.window_fuzzy import FuzzyWindowFinder
+from .modules.stylix import get_stylix_css_path
+from .config import STYLIX
 
 
 tray = SystemTray(name="system-tray", spacing=4)
@@ -22,7 +24,21 @@ finder = FuzzyWindowFinder()
 bar_windows = []
 
 app = Application("bar", dummy, finder)
-app.set_stylesheet_from_file(get_relative_path("styles/main.css"))
+
+# Load CSS - use Stylix if enabled, otherwise use default
+if STYLIX.get("enable", False):
+    stylix_css_path = get_stylix_css_path()
+    if stylix_css_path:
+        logger.info("[Bar] Using Stylix CSS")
+        app.set_stylesheet_from_file(stylix_css_path)
+        # Also load base styles for imports
+        app.set_stylesheet_from_file(get_relative_path("styles/main.css"))
+    else:
+        logger.warning("[Bar] Stylix enabled but CSS generation failed, falling back to default")
+        app.set_stylesheet_from_file(get_relative_path("styles/main.css"))
+else:
+    logger.info("[Bar] Using default CSS")
+    app.set_stylesheet_from_file(get_relative_path("styles/main.css"))
 
 
 def spawn_bars():

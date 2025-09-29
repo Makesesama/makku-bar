@@ -45,7 +45,8 @@
       }
     )
     // {
-      homeManagerModules.makku-bar =
+      homeManagerModules = {
+        makku-bar =
         {
           config,
           lib,
@@ -127,5 +128,7 @@
               };
           };
         };
+        stylix-makku-bar = import ./nix/stylix/hm.nix;
+      };
     };
 }
