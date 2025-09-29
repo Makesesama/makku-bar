@@ -1,6 +1,7 @@
 import psutil
 from fabric.widgets.box import Box
 from fabric.widgets.label import Label
+from fabric.widgets.image import Image
 from fabric.widgets.overlay import Overlay
 from fabric.widgets.datetime import DateTime
 from fabric.widgets.centerbox import CenterBox
@@ -114,7 +115,7 @@ class StatusBar(Window):
                 spacing=6,
                 orientation="h",
                 children=[
-                    Label(name="nixos-label", markup=""),
+                    Image(name="nixos-label", icon_name="nix-snowflake-white", icon_size=20),
                     self.workspaces,
                 ],
             ),
