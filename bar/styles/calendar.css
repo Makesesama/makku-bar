@@ -1,4 +1,4 @@
-/* Calendar widget styling (fallback when Stylix is disabled) */
+/* Calendar widget styling */
 
 /* Date time button */
 #date-time-button {
@@ -9,10 +9,17 @@
     box-shadow: none;
 }
 
+#date-time {
+    color: var(--foreground);
+    background-color: var(--module-bg);
+    padding: 4px 8px;
+    border-radius: 12px;
+}
+
 /* Calendar popup */
 #calendar-popup {
-    background-color: var(--background-alt);
-    border: solid 2px var(--surface);
+    background-color: var(--window-bg);
+    border: solid 2px var(--border-color);
     border-radius: 12px;
     box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
     animation: slide-down 200ms ease-out;
@@ -32,20 +39,18 @@
 #calendar-title {
     color: var(--foreground);
     font-weight: bold;
-    font-size: 1.1em;
     margin-bottom: 8px;
 }
 
 #events-box {
-    background-color: var(--background-alt);
-    border: solid 1px var(--surface);
+    background-color: var(--window-bg);
+    border: none; /* Remove outline */
     border-radius: 8px;
     padding: 16px;
 }
 
 #no-events {
-    color: var(--muted);
-    font-size: 0.85em;
+    color: var(--light-grey);
     padding: 4px;
 }
 
@@ -54,6 +59,8 @@
     border-radius: 6px;
     padding: 8px 12px;
     margin: 4px 0px;
+    background-color: var(--module-bg);
+    border: none; /* Remove outline */
     transition: background-color 0.15s ease;
 }
 
@@ -61,49 +68,31 @@
     margin-left: 8px;
 }
 
-.event-item.upcoming {
-    background-color: var(--surface);
-}
-
-.event-item.past {
-    background-color: var(--surface);
-    opacity: 0.6;
-}
-
 .event-title {
     font-weight: bold;
-    font-size: 1em;
-}
-
-.event-title.upcoming {
     color: var(--foreground);
 }
 
-.event-title.past {
-    color: var(--muted);
-}
-
 .event-time {
-    font-size: 0.85em;
-}
-
-.event-time.upcoming {
-    color: var(--muted);
-}
-
-.event-time.past {
-    color: var(--muted-dark);
+    color: var(--dark-fg);
 }
 
 .event-location {
-    font-size: 0.85em;
+    color: var(--light-grey);
 }
 
-.event-location.upcoming {
-    color: var(--muted-dark);
+/* Current time indicator */
+.current-time-indicator {
+    margin: 8px 0px;
+    padding: 4px 0px;
 }
 
-.event-location.past {
-    color: var(--muted-dark);
-    opacity: 0.8;
+#current-time-label {
+    color: var(--blue);
+    font-weight: bold;
+}
+
+#current-time-line {
+    color: var(--blue);
+    font-weight: bold;
 }

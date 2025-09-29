@@ -30,7 +30,7 @@ stylix:
         serif: "Times New Roman"
         monospace: "JetBrains Mono"
         sizes:
-            desktop: 14
+            desktop: 16
             applications: 14
             terminal: 16
             popups: 14

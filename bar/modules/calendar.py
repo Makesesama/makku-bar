@@ -191,13 +191,14 @@ class CalendarPopup(Window):
 
         if not events:
             logger.info("[Calendar] No events, showing 'no events' message")
-            no_events_label = Label("No upcoming events today", name="no-events")
+            no_events_label = Label("No events today", name="no-events")
             self.events_box.add(no_events_label)
             return
 
-        # Check current time for determining past vs upcoming
+        # Check current time for time indicator placement
         now = datetime.now()
         current_time = now.strftime("%H:%M")
+        current_time_added = False
 
         for i, event in enumerate(events):
             logger.info(f"[Calendar] Processing event {i+1} for display")
@@ -206,8 +207,10 @@ class CalendarPopup(Window):
             end_time = event.get("end", "").split()[1] if event.get("end") else ""
             location = event.get("location", "")
 
-            # Determine if event is in the past
-            is_past = end_time and end_time <= current_time
+            # Check if we should add current time indicator before this event
+            if not current_time_added and start_time and start_time > current_time:
+                self.add_current_time_indicator(current_time)
+                current_time_added = True
 
             # Format time display
             time_str = ""
@@ -216,17 +219,14 @@ class CalendarPopup(Window):
             elif start_time:
                 time_str = start_time
 
-            logger.info(
-                f"[Calendar] Creating widget for: {title} ({time_str}) - {'Past' if is_past else 'Upcoming'}"
-            )
+            logger.info(f"[Calendar] Creating widget for: {title} ({time_str})")
 
             # Create event item with horizontal layout - time on left, content on right
-            event_status = "past" if is_past else "upcoming"
             event_box = Box(
                 name="event-item",
                 orientation="h",  # Horizontal layout
                 spacing=12,
-                style_classes=[f"event-item", event_status],
+                style_classes=["event-item"],
             )
 
             # Left side: Time display (fixed width for alignment)
@@ -234,7 +234,7 @@ class CalendarPopup(Window):
             time_label = Label(
                 time_display,
                 name="event-time",
-                style_classes=["event-time", event_status],
+                style_classes=["event-time"],
                 style="min-width: 100px;"  # Fixed width for consistent alignment
             )
 
@@ -245,12 +245,11 @@ class CalendarPopup(Window):
                 spacing=2
             )
 
-            # Title with status prefix
-            title_prefix = "✓ " if is_past else ""
+            # Title (no more status prefix)
             title_label = Label(
-                f"{title_prefix}{title}",
+                title,
                 name="event-title",
-                style_classes=["event-title", event_status],
+                style_classes=["event-title"],
             )
             content_box.add(title_label)
 
@@ -258,7 +257,7 @@ class CalendarPopup(Window):
                 location_label = Label(
                     f"📍 {location}",
                     name="event-location",
-                    style_classes=["event-location", event_status],
+                    style_classes=["event-location"],
                 )
                 content_box.add(location_label)
 
@@ -269,9 +268,43 @@ class CalendarPopup(Window):
             self.events_box.add(event_box)
             logger.info(f"[Calendar] Added event widget to events_box")
 
+        # Add current time indicator at the end if not added yet
+        if not current_time_added:
+            self.add_current_time_indicator(current_time)
+
         # Force refresh the popup display
         self.events_box.show_all()
         logger.info(f"[Calendar] Finished updating popup")
+
+    def add_current_time_indicator(self, current_time):
+        """Add a current time indicator to the events list"""
+        time_indicator = Box(
+            name="current-time-indicator",
+            orientation="h",
+            spacing=8,
+            style_classes=["current-time-indicator"],
+        )
+
+        # Current time label
+        time_label = Label(
+            current_time,
+            name="current-time-label",
+            style_classes=["current-time-label"],
+            style="min-width: 100px; font-weight: bold;"
+        )
+
+        # Line indicator
+        line_label = Label(
+            "━━━ NOW",
+            name="current-time-line",
+            style_classes=["current-time-line"],
+        )
+
+        time_indicator.add(time_label)
+        time_indicator.add(line_label)
+
+        self.events_box.add(time_indicator)
+        logger.info(f"[Calendar] Added current time indicator at {current_time}")
 
 
 class CalendarWidget(Button):
