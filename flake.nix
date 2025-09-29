@@ -95,6 +95,11 @@
                       description = "Whether to show the window title in the center of the bar";
                     };
                   };
+                  stylix = lib.mkOption {
+                    type = lib.types.attrsOf lib.types.anything;
+                    default = { enable = false; };
+                    description = "Stylix configuration passed from the stylix module";
+                  };
                 };
               };
               default = {
@@ -102,6 +107,7 @@
                 battery.enable = false;
                 height = 40;
                 window_title.enable = true;
+                stylix.enable = false;
               };
             };
           };
