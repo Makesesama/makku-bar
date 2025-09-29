@@ -12,6 +12,9 @@
   wrapGAppsHook3,
   playerctl,
   webp-pixbuf-loader,
+  notmuch,
+  khal,
+  emacs,
   ...
 }:
 
@@ -38,6 +41,8 @@ python3Packages.buildPythonApplication {
     gdk-pixbuf
     playerctl
     webp-pixbuf-loader
+    notmuch
+    khal
   ];
 
   dependencies = with python3Packages; [
@@ -60,12 +65,18 @@ python3Packages.buildPythonApplication {
     cp scripts/launcher.py $out/bin/bar
     chmod +x $out/bin/bar
 
+
     runHook postInstall
   '';
 
   preFixup = ''
     makeWrapperArgs+=("''${gappsWrapperArgs[@]}")
+    makeWrapperArgs+=(--prefix PATH : ${lib.makeBinPath [ khal notmuch emacs ]})
   '';
+
+  passthru = {
+    inherit khal notmuch emacs;
+  };
 
   meta = {
     changelog = "";

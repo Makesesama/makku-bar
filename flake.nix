@@ -100,6 +100,35 @@
                     default = { enable = false; };
                     description = "Stylix configuration passed from the stylix module";
                   };
+                  calendar = {
+                    enable = lib.mkOption {
+                      type = lib.types.bool;
+                      default = true;
+                      description = "Whether to enable the calendar widget";
+                    };
+                    khal_path = lib.mkOption {
+                      type = lib.types.str;
+                      default = "khal";
+                      description = "Path to the khal binary";
+                    };
+                  };
+                  notmuch = {
+                    enable = lib.mkOption {
+                      type = lib.types.bool;
+                      default = true;
+                      description = "Whether to enable the notmuch email widget";
+                    };
+                    notmuch_path = lib.mkOption {
+                      type = lib.types.str;
+                      default = "notmuch";
+                      description = "Path to the notmuch binary";
+                    };
+                    emacsclient_command = lib.mkOption {
+                      type = lib.types.str;
+                      default = "emacsclient";
+                      description = "Path to the emacsclient binary";
+                    };
+                  };
                 };
               };
               default = {
@@ -108,6 +137,15 @@
                 height = 40;
                 window_title.enable = true;
                 stylix.enable = false;
+                calendar = {
+                  enable = true;
+                  khal_path = "khal";
+                };
+                notmuch = {
+                  enable = true;
+                  notmuch_path = "notmuch";
+                  emacsclient_command = "emacsclient";
+                };
               };
             };
           };

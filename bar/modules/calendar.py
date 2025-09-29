@@ -1,7 +1,7 @@
 import json
 import subprocess
 import shutil
-from datetime import datetime
+from datetime import datetime, date
 from fabric.widgets.box import Box
 from fabric.widgets.label import Label
 from fabric.widgets.button import Button
@@ -9,6 +9,17 @@ from fabric.widgets.image import Image
 from fabric.widgets.wayland import WaylandWindow as Window
 from loguru import logger
 from bar.config import CALENDAR
+
+# Try to import khal as a Python library
+try:
+    from khal.cli.main import main_khal
+    from khal.settings import get_config
+    from khal.khalendar import CalendarCollection
+    KHAL_AVAILABLE = True
+    logger.info("[Calendar] Using khal as Python library")
+except ImportError:
+    KHAL_AVAILABLE = False
+    logger.info("[Calendar] khal Python library not available, falling back to subprocess")
 
 
 class CalendarService:
@@ -64,15 +75,52 @@ class CalendarService:
         """Get cached events without triggering update"""
         return self.events
 
-    def update_events(self):
-        """Fetch today's events from khal"""
-        # Check if calendar is enabled
-        if not CALENDAR.get("enable", True):
-            logger.info("[Calendar] Calendar is disabled in config")
-            self.events = []
-            self.emit_events_changed(self.events)
-            return
+    def update_events_python_api(self):
+        """Fetch today's events using khal Python API"""
+        try:
+            # Get khal configuration
+            config = get_config()
 
+            # Create calendar collection
+            collection = CalendarCollection.from_calendars(
+                calendars=config['calendars'],
+                dbpath=config['sqlite']['path'],
+                locale=config['locale'],
+                color=config['default']['print_new'],
+                unicode_symbols=config['default']['unicode_symbols'],
+                default_calendar=config['default']['default_calendar'],
+                readonly=True
+            )
+
+            # Get today's events
+            today = date.today()
+            events = collection.get_events_on(today)
+
+            # Format events to match our expected structure
+            formatted_events = []
+            for event in events:
+                formatted_event = {
+                    'title': str(event.summary),
+                    'start': event.start.strftime('%m-%d %H:%M') if hasattr(event.start, 'strftime') else '',
+                    'end': event.end.strftime('%m-%d %H:%M') if hasattr(event.end, 'strftime') else '',
+                    'location': str(event.location) if event.location else ''
+                }
+                formatted_events.append(formatted_event)
+
+            # Sort by start time
+            formatted_events.sort(key=lambda e: e.get('start', ''))
+
+            self.events = formatted_events
+            logger.info(f"[Calendar] Found {len(self.events)} events using Python API")
+            self.emit_events_changed(self.events)
+
+        except Exception as e:
+            logger.error(f"[Calendar] Error using khal Python API: {e}")
+            # Fall back to subprocess method
+            self.update_events_subprocess()
+
+    def update_events_subprocess(self):
+        """Fetch today's events using khal subprocess (fallback)"""
         # Get khal path from config
         khal_path = CALENDAR.get("khal_path", "khal")
 
@@ -115,56 +163,38 @@ class CalendarService:
                         except json.JSONDecodeError:
                             continue
 
-                # Filter events for today - both past and upcoming
-                now = datetime.now()
-                current_time = now.strftime("%H:%M")
-                current_date = now.strftime("%m-%d")
-
-                past_events = []
-                upcoming_events = []
-
-                for event in all_events:
-                    event_date = (
-                        event.get("start", "").split()[0] if event.get("start") else ""
-                    )
-                    event_start_time = (
-                        event.get("start", "").split()[1] if event.get("start") else ""
-                    )
-                    event_end_time = (
-                        event.get("end", "").split()[1] if event.get("end") else ""
-                    )
-
-                    # Only process events from today
-                    if event_date == current_date:
-                        if not event_end_time:  # All-day events
-                            upcoming_events.append(event)
-                        elif event_end_time > current_time:  # Haven't ended yet
-                            upcoming_events.append(event)
-                        elif event_end_time <= current_time:  # Already ended
-                            past_events.append(event)
-
-                # Sort past events by start time (most recent first)
-                past_events.sort(key=lambda e: e.get("start", ""), reverse=True)
-
-                # Take up to 3 most recent past events and up to 5 upcoming events
-                selected_past = past_events[:3]
-                selected_upcoming = upcoming_events[:5]
-
-                # Combine: past events first, then upcoming events
-                self.events = selected_past + selected_upcoming
-                logger.info(f"[Calendar] Found {len(self.events)} upcoming events")
-                for i, event in enumerate(self.events):
-                    logger.info(
-                        f"[Calendar] Event {i+1}: {event.get('title', 'No title')} at {event.get('start', 'No time')}"
-                    )
+                self.events = all_events
+                logger.info(f"[Calendar] Found {len(self.events)} events using subprocess")
+                self.emit_events_changed(self.events)
+            else:
+                self.events = []
                 self.emit_events_changed(self.events)
 
         except subprocess.CalledProcessError as e:
             logger.error(f"[Calendar] Failed to fetch events: {e}")
             self.events = []
+            self.emit_events_changed(self.events)
         except Exception as e:
             logger.error(f"[Calendar] Error processing events: {e}")
             self.events = []
+            self.emit_events_changed(self.events)
+
+    def update_events(self):
+        """Fetch today's events from khal"""
+        # Check if calendar is enabled
+        if not CALENDAR.get("enable", True):
+            logger.info("[Calendar] Calendar is disabled in config")
+            self.events = []
+            self.emit_events_changed(self.events)
+            return
+
+        # Try Python API first, fall back to subprocess
+        if KHAL_AVAILABLE:
+            logger.info("[Calendar] Using khal Python API")
+            self.update_events_python_api()
+        else:
+            logger.info("[Calendar] Using khal subprocess")
+            self.update_events_subprocess()
 
 
 class CalendarPopup(Window):
