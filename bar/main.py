@@ -6,10 +6,10 @@ if DEV:
     # In dev mode, disable fabric logs but keep stylix and bar logs
     logger.disable("fabric")
 else:
-    # In production, disable all debug logs, only keep warnings and errors
+    # In production, disable fabric logs but keep bar logs for debugging
+    import sys
     logger.disable("fabric")
-    logger.disable("bar")
-    logger.configure(handlers=[{"sink": lambda msg: print(msg, end=""), "level": "WARNING"}])
+    logger.configure(handlers=[{"sink": sys.stderr, "level": "INFO", "format": "{time} | {level} | {name}:{function}:{line} - {message}"}])
 
 from fabric import Application
 from fabric.system_tray.widgets import SystemTray

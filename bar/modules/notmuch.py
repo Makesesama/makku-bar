@@ -82,12 +82,16 @@ class NotmuchService:
 
         try:
             # Get unread email count
+            cmd = [notmuch_path, "count", "tag:unread"]
+            logger.info(f"[Notmuch] Running command: {' '.join(cmd)}")
             result = subprocess.run(
-                [notmuch_path, "count", "tag:unread"],
+                cmd,
                 capture_output=True,
                 text=True,
                 check=True,
             )
+            logger.info(f"[Notmuch] Command stdout: '{result.stdout.strip()}'")
+            logger.info(f"[Notmuch] Command stderr: '{result.stderr.strip()}'")
 
             if result.stdout.strip():
                 self.unread_count = int(result.stdout.strip())
@@ -146,8 +150,10 @@ class NotmuchWidget(Button):
 
         try:
             # Open emacsclient with notmuch function
-            subprocess.Popen([emacsclient_command, "-c", "-e", "(notmuch)"], start_new_session=True)
-            logger.info(f"[Notmuch] Opened notmuch in emacsclient with command: {emacsclient_command}")
+            cmd = [emacsclient_command, "-c", "-e", "(notmuch)"]
+            logger.info(f"[Notmuch] Running emacsclient command: {' '.join(cmd)}")
+            subprocess.Popen(cmd, start_new_session=True)
+            logger.info(f"[Notmuch] Successfully started emacsclient process")
         except Exception as e:
             logger.error(f"[Notmuch] Failed to open notmuch in emacsclient '{emacsclient_command}': {e}")
 

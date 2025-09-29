@@ -132,24 +132,28 @@ class CalendarService:
             return
 
         try:
+            cmd = [
+                khal_path,
+                "list",
+                "--json",
+                "title",
+                "--json",
+                "start",
+                "--json",
+                "end",
+                "--json",
+                "location",
+                "today",
+            ]
+            logger.info(f"[Calendar] Running command: {' '.join(cmd)}")
             result = subprocess.run(
-                [
-                    khal_path,
-                    "list",
-                    "--json",
-                    "title",
-                    "--json",
-                    "start",
-                    "--json",
-                    "end",
-                    "--json",
-                    "location",
-                    "today",
-                ],
+                cmd,
                 capture_output=True,
                 text=True,
                 check=True,
             )
+            logger.info(f"[Calendar] Command stdout: {result.stdout[:200]}...")
+            logger.info(f"[Calendar] Command stderr: {result.stderr[:200]}...")
 
             if result.stdout.strip():
                 lines = result.stdout.strip().split("\n")
