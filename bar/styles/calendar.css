@@ -1,0 +1,90 @@
+/* Calendar widget styling (fallback when Stylix is disabled) */
+
+/* Date time button */
+#date-time-button {
+    background: transparent;
+    border: none;
+    padding: 0;
+    margin: 0;
+    box-shadow: none;
+}
+
+/* Calendar popup */
+#calendar-popup {
+    background-color: var(--background-alt);
+    border: solid 2px var(--surface);
+    border-radius: 8px;
+}
+
+#calendar-title {
+    color: var(--foreground);
+    font-weight: bold;
+    margin-bottom: 8px;
+}
+
+#events-box {
+    background-color: var(--background-alt);
+    border: solid 1px var(--surface);
+    border-radius: 8px;
+    padding: 12px;
+}
+
+#no-events {
+    color: var(--muted);
+    font-size: 12px;
+    padding: 4px;
+}
+
+/* Calendar event items */
+.event-item {
+    border-radius: 4px;
+    padding: 6px;
+    margin: 2px 0px;
+}
+
+.event-item.upcoming {
+    background-color: var(--surface);
+}
+
+.event-item.past {
+    background-color: var(--surface);
+    opacity: 0.6;
+}
+
+.event-title {
+    font-weight: bold;
+    font-size: 12px;
+}
+
+.event-title.upcoming {
+    color: var(--foreground);
+}
+
+.event-title.past {
+    color: var(--muted);
+}
+
+.event-time {
+    font-size: 11px;
+}
+
+.event-time.upcoming {
+    color: var(--muted);
+}
+
+.event-time.past {
+    color: var(--muted-dark);
+}
+
+.event-location {
+    font-size: 11px;
+}
+
+.event-location.upcoming {
+    color: var(--muted-dark);
+}
+
+.event-location.past {
+    color: var(--muted-dark);
+    opacity: 0.8;
+}

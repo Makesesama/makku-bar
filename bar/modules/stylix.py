@@ -125,6 +125,92 @@ def generate_stylix_css():
     border-radius: 12px;
 }}
 
+#date-time-button {{
+    background: transparent;
+    border: none;
+    padding: 0;
+    margin: 0;
+    box-shadow: none;
+}}
+
+/* Calendar popup */
+#calendar-popup {{
+    background-color: #{colors["base00"]};
+    border: solid 2px #{colors["base02"]};
+    border-radius: 8px;
+}}
+
+#calendar-title {{
+    color: #{colors["base05"]};
+    font-weight: bold;
+    margin-bottom: 8px;
+}}
+
+#events-box {{
+    background-color: #{colors["base00"]};
+    border: solid 1px #{colors["base02"]};
+    border-radius: 8px;
+    padding: 12px;
+}}
+
+#no-events {{
+    color: #{colors["base03"]};
+}}
+
+/* Calendar event items */
+.event-item {{
+    border-radius: 4px;
+    padding: 6px;
+    margin: 2px 0px;
+}}
+
+.event-item.upcoming {{
+    background-color: #{colors["base01"]};
+}}
+
+.event-item.past {{
+    background-color: #{colors["base01"]};
+    opacity: 0.6;
+}}
+
+.event-title {{
+    font-weight: bold;
+    font-size: 12px;
+}}
+
+.event-title.upcoming {{
+    color: #{colors["base05"]};
+}}
+
+.event-title.past {{
+    color: #{colors["base04"]};
+}}
+
+.event-time {{
+    font-size: 11px;
+}}
+
+.event-time.upcoming {{
+    color: #{colors["base04"]};
+}}
+
+.event-time.past {{
+    color: #{colors["base03"]};
+}}
+
+.event-location {{
+    font-size: 11px;
+}}
+
+.event-location.upcoming {{
+    color: #{colors["base03"]};
+}}
+
+.event-location.past {{
+    color: #{colors["base03"]};
+    opacity: 0.8;
+}}
+
 /* Tooltips */
 tooltip {{
     border: solid 2px;

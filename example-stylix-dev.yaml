@@ -2,7 +2,7 @@ height: 42
 window_title:
     enable: false
 vinyl:
-    enable: true
+    enable: false
 battery:
     enable: true
 stylix:

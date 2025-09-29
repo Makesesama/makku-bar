@@ -8,6 +8,7 @@ from fabric.widgets.centerbox import CenterBox
 from bar.modules.player import Player
 from bar.modules.vinyl import VinylButton
 from bar.modules.battery import Battery
+from bar.modules.calendar import CalendarService, CalendarPopup
 from fabric.widgets.wayland import WaylandWindow as Window
 from fabric.system_tray.widgets import SystemTray
 from fabric.river.widgets import (
@@ -52,7 +53,23 @@ class StatusBar(Window):
             buttons_factory=lambda ws_id: RiverWorkspaceButton(id=ws_id, label=None),
             river_service=self.river,
         )
-        self.date_time = DateTime(name="date-time", formatters="%d %b - %H:%M")
+        # Create calendar components (refresh every 2 minutes)
+        self.calendar_service = CalendarService(update_interval=120000)
+        self.calendar_popup = CalendarPopup()
+        self.calendar_popup_visible = False
+
+        # Create clickable datetime widget
+        from fabric.widgets.button import Button
+        datetime_widget = DateTime(name="date-time", formatters="%d %b - %H:%M")
+        self.date_time = Button(
+            name="date-time-button",
+            child=datetime_widget,
+            on_clicked=self.toggle_calendar,
+            style="background: transparent; border: none; padding: 0; margin: 0; box-shadow: none;"
+        )
+
+        # Connect calendar service to popup
+        self.calendar_service.connect("events-changed", self.update_calendar_display)
         self.system_tray = tray
 
         self.active_window = RiverActiveWindow(
@@ -83,6 +100,7 @@ class StatusBar(Window):
         self.battery = None
         if BATTERY["enable"]:
             self.battery = Battery()
+
         self.status_container = Box(
             name="widgets-container",
             spacing=4,
@@ -142,7 +160,35 @@ class StatusBar(Window):
 
         self.show_all()
 
+    def __del__(self):
+        """Cleanup when bar is destroyed"""
+        if hasattr(self, 'calendar_service'):
+            self.calendar_service.stop_monitoring()
+
     def update_progress_bars(self, service, cpu_percent, memory_percent):
         """Update progress bars when system stats change"""
         self.cpu_progress_bar.value = cpu_percent
         self.ram_progress_bar.value = memory_percent
+
+    def toggle_calendar(self, button=None):
+        """Toggle the calendar popup when datetime is clicked"""
+        from loguru import logger
+        logger.info(f"[Calendar] DateTime clicked, popup_visible: {self.calendar_popup_visible}")
+
+        if self.calendar_popup_visible:
+            logger.info("[Calendar] Hiding calendar popup")
+            self.calendar_popup.set_visible(False)
+            self.calendar_popup_visible = False
+        else:
+            logger.info("[Calendar] Showing calendar popup")
+            # Use cached events - no need to refresh on click
+            cached_events = self.calendar_service.get_cached_events()
+            logger.info(f"[Calendar] Using {len(cached_events)} cached events")
+            self.calendar_popup.update_events_display(cached_events)
+            self.calendar_popup.set_visible(True)
+            self.calendar_popup.show_all()
+            self.calendar_popup_visible = True
+
+    def update_calendar_display(self, service, events):
+        """Update the calendar popup with events"""
+        self.calendar_popup.update_events_display(events)
