@@ -144,6 +144,8 @@ tooltip>* {{
 #workspaces>button {{
     background-color: #{colors["base05"]};
     border-radius: 100px;
+    padding: 0px 8px;
+    transition: padding 0.05s steps(8);
 }}
 
 #workspaces>button>label {{
@@ -156,6 +158,7 @@ tooltip>* {{
 
 #workspaces>button.active {{
     background-color: #{colors["base0D"]};
+    padding: 0px 32px;
 }}
 
 #workspaces>button.urgent {{
