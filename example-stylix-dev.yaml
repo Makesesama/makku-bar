@@ -6,6 +6,13 @@ vinyl:
     enable: false
 battery:
     enable: true
+calendar:
+    enable: true
+    khal_path: "khal"  # or full path like "/home/user/.nix-profile/bin/khal"
+notmuch:
+    enable: true
+    notmuch_path: "notmuch"  # or full path like "/home/user/.nix-profile/bin/notmuch"
+    emacsclient_command: "emacsclient"  # or full path like "/home/user/.nix-profile/bin/emacsclient"
 stylix:
     enable: true
     colors:

@@ -9,6 +9,7 @@ from bar.modules.player import Player
 from bar.modules.vinyl import VinylButton
 from bar.modules.battery import Battery
 from bar.modules.calendar import CalendarService, CalendarPopup
+from bar.modules.notmuch import NotmuchWidget
 from fabric.widgets.wayland import WaylandWindow as Window
 from fabric.system_tray.widgets import SystemTray
 from fabric.river.widgets import (
@@ -20,7 +21,7 @@ from fabric.river.widgets import (
 from fabric.widgets.circularprogressbar import CircularProgressBar
 from bar.services.system_stats import SystemStatsService
 
-from bar.config import VINYL, BATTERY, BAR_HEIGHT, WINDOW_TITLE
+from bar.config import VINYL, BATTERY, BAR_HEIGHT, WINDOW_TITLE, NOTMUCH
 
 
 class StatusBar(Window):
@@ -101,6 +102,10 @@ class StatusBar(Window):
         if BATTERY["enable"]:
             self.battery = Battery()
 
+        self.notmuch = None
+        if NOTMUCH["enable"]:
+            self.notmuch = NotmuchWidget()
+
         self.status_container = Box(
             name="widgets-container",
             spacing=4,
@@ -119,6 +124,9 @@ class StatusBar(Window):
 
         if self.battery:
             end_container_children.append(self.battery)
+
+        if self.notmuch:
+            end_container_children.append(self.notmuch)
 
         end_container_children.append(self.date_time)
 

@@ -1,0 +1,35 @@
+/* Notmuch email widget styling */
+
+#notmuch-widget {
+    background-color: var(--module-bg);
+    padding: 4px 8px;
+    border-radius: 12px;
+    transition: background-color 0.2s ease;
+}
+
+#notmuch-widget:hover {
+    background-color: var(--light-bg);
+}
+
+#notmuch-widget.has-unread {
+    background-color: var(--blue);
+}
+
+#notmuch-widget.has-unread:hover {
+    background-color: var(--turquoise);
+}
+
+#notmuch-widget.no-unread {
+    background-color: var(--module-bg);
+}
+
+#unread-count {
+    color: var(--foreground);
+    font-size: 14px;
+    font-weight: bold;
+    min-width: 16px;
+}
+
+#notmuch-widget.has-unread #unread-count {
+    color: var(--background);
+}

@@ -1,5 +1,6 @@
 import json
 import subprocess
+import shutil
 from datetime import datetime
 from fabric.widgets.box import Box
 from fabric.widgets.label import Label
@@ -7,6 +8,7 @@ from fabric.widgets.button import Button
 from fabric.widgets.image import Image
 from fabric.widgets.wayland import WaylandWindow as Window
 from loguru import logger
+from bar.config import CALENDAR
 
 
 class CalendarService:
@@ -64,10 +66,27 @@ class CalendarService:
 
     def update_events(self):
         """Fetch today's events from khal"""
+        # Check if calendar is enabled
+        if not CALENDAR.get("enable", True):
+            logger.info("[Calendar] Calendar is disabled in config")
+            self.events = []
+            self.emit_events_changed(self.events)
+            return
+
+        # Get khal path from config
+        khal_path = CALENDAR.get("khal_path", "khal")
+
+        # Check if khal is available
+        if not shutil.which(khal_path):
+            logger.warning(f"[Calendar] khal not found at '{khal_path}'. Please install khal or configure the correct path.")
+            self.events = []
+            self.emit_events_changed(self.events)
+            return
+
         try:
             result = subprocess.run(
                 [
-                    "khal",
+                    khal_path,
                     "list",
                     "--json",
                     "title",
