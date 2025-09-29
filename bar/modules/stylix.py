@@ -137,23 +137,29 @@ tooltip>* {{
 }}
 
 /* Workspaces */
-.workspace {{
+#workspaces {{
     background-color: #{colors["base01"]};
-    border: 1px solid #{colors["base02"]};
-    border-radius: 4px;
-    color: #{colors["base05"]};
-    padding: 2px 8px;
-    margin: 0 2px;
 }}
 
-.workspace.active {{
+#workspaces>button {{
+    background-color: #{colors["base05"]};
+    border-radius: 100px;
+}}
+
+#workspaces>button>label {{
+    font-size: 0px;
+}}
+
+#workspaces>button.empty {{
+    background-color: #{colors["base03"]};
+}}
+
+#workspaces>button.active {{
     background-color: #{colors["base0D"]};
-    color: #{colors["base00"]};
 }}
 
-.workspace.urgent {{
+#workspaces>button.urgent {{
     background-color: #{colors["base08"]};
-    color: #{colors["base00"]};
 }}
 """
 
