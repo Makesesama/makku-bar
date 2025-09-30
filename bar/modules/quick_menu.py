@@ -156,7 +156,7 @@ class QuickMenu(Window):
     def __init__(self, **kwargs):
         super().__init__(
             name="quick-menu",
-            layer="top",
+            layer="overlay",  # Changed from 'top' to 'overlay' for better shadow support
             anchor="top right",
             margin="40px 10px 0px 0px",
             exclusivity="none",
