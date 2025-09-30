@@ -7,6 +7,7 @@ from fabric.widgets.datetime import DateTime
 from fabric.widgets.centerbox import CenterBox
 from bar.modules.player import Player
 from bar.modules.vinyl import VinylButton
+from bar.modules.quick_menu import QuickMenuOpener
 from bar.modules.battery import Battery
 from bar.modules.calendar import CalendarService, CalendarPopup
 from bar.modules.notmuch import NotmuchWidget
@@ -98,6 +99,12 @@ class StatusBar(Window):
         if VINYL["enable"]:
             self.vinyl = VinylButton()
 
+        # Create quick menu button
+        self.quick_menu = QuickMenuOpener(icon_name="open-menu-symbolic")
+        # Setup audio section with vinyl if enabled
+        if self.vinyl:
+            self.quick_menu.get_menu().setup_audio_section(vinyl_service=self.vinyl)
+
         self.battery = None
         if BATTERY["enable"]:
             self.battery = Battery()
@@ -115,9 +122,6 @@ class StatusBar(Window):
 
         end_container_children = []
 
-        if self.vinyl:
-            end_container_children.append(self.vinyl)
-
         end_container_children.append(self.status_container)
         if self.system_tray:
             end_container_children.append(self.system_tray)
@@ -128,6 +132,8 @@ class StatusBar(Window):
         if self.notmuch:
             end_container_children.append(self.notmuch)
 
+        # Add quick menu button next to time
+        end_container_children.append(self.quick_menu)
         end_container_children.append(self.date_time)
 
         center_children = []

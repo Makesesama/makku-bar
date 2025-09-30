@@ -143,8 +143,10 @@ def generate_stylix_css():
     box-shadow: none;
 }}
 
-/* Calendar popup */
-#calendar-popup {{
+/* Generic popup styling */
+.popup-window,
+#calendar-popup,
+#quick-menu {{
     background-color: #{colors["base00"]};
     border: solid 2px #{colors["base02"]};
     border-radius: 12px;
@@ -283,6 +285,69 @@ tooltip>* {{
 
 #workspaces>button.urgent {{
     background-color: #{colors["base08"]};
+}}
+
+/* Quick Menu styling */
+#quick-menu-container {{
+    background-color: #{colors["base00"]};
+    border-radius: 8px;
+}}
+
+#quick-menu-button {{
+    background: transparent;
+    border: none;
+    padding: 4px;
+    margin: 0;
+    box-shadow: none;
+    color: #{colors["base05"]};
+}}
+
+#quick-menu-button:hover {{
+    background-color: #{colors["base01"]};
+    border-radius: 8px;
+}}
+
+.quick-menu-item {{
+    border-radius: 6px;
+    transition: background-color 0.15s ease;
+}}
+
+.quick-menu-item:hover {{
+    background-color: #{colors["base01"]};
+}}
+
+.section-title {{
+    color: #{colors["base04"]};
+    font-weight: bold;
+    font-size: {small_font}px;
+}}
+
+/* Vinyl button styling */
+#vinyl-button {{
+    background-color: transparent;
+    color: #{colors["base05"]};
+    border: none;
+    padding: 4px;
+    margin: 0px;
+    border-radius: 8px;
+}}
+
+#vinyl-button.active {{
+    background-color: #{colors["base0B"]};
+    color: #{colors["base00"]};
+}}
+
+#vinyl-icon {{
+    color: inherit;
+}}
+
+/* Toggle switch styling for quick menu */
+.toggle-active {{
+    background-color: #{colors["base0B"]};
+}}
+
+.toggle-inactive {{
+    background-color: #{colors["base02"]};
 }}
 """
 
