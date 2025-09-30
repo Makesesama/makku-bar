@@ -1,12 +1,10 @@
-from fabric.widgets.box import Box
-from fabric.widgets.label import Label
-from fabric.widgets.eventbox import EventBox
-from fabric.widgets.overlay import Overlay
+from fabric.widgets.button import Button
+from fabric.widgets.image import Image
 from fabric.core.service import Property
 import subprocess
 
 
-class VinylButton(Box):
+class VinylButton(Button):
     @Property(bool, "read-write", default_value=False)
     def active(self) -> bool:
         return self._active
@@ -35,34 +33,25 @@ class VinylButton(Box):
         ],
         **kwargs,
     ):
-        super().__init__(**kwargs)
-
         # Initialize properties
         self._active = False
         self._active_command = active_command
         self._inactive_command = inactive_command
 
-        # Set up the icon
-        self.icon = Label(
-            label="",  # CD icon
+        # Set up the icon using GTK icon
+        self.icon = Image(
+            icon_name="folder-music-symbolic",
+            icon_size=16,
             name="vinyl-icon",
-            style="",
         )
 
-        # Set up event box to handle clicks
-        self.event_box = EventBox(
-            events="button-press",
-            child=Overlay(
-                child=self.icon,
-            ),
+        # Initialize the Button with the icon as child
+        super().__init__(
             name="vinyl-button",
+            child=self.icon,
+            on_clicked=self._on_clicked,
+            **kwargs,
         )
-
-        # Connect click event
-        self.event_box.connect("button-press-event", self._on_clicked)
-
-        # Add to parent box
-        self.add(self.event_box)
 
         # Initialize appearance
         self._update_appearance()
@@ -74,12 +63,10 @@ class VinylButton(Box):
         else:
             self.remove_style_class("active")
 
-    def _on_clicked(self, _, event):
+    def _on_clicked(self, button=None):
         """Handle button click event"""
-        if event.button == 1:  # Left click
-            # Toggle active state
-            self.active = not self.active
-        return True
+        # Toggle active state
+        self.active = not self.active
 
     def _execute_active_command(self):
         """Execute shell command when button is activated"""

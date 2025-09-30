@@ -1,41 +1,29 @@
 /* Vinyl button styling */
 #vinyl-button {
-    padding: 0px 8px;
-    transition: padding 0.05s steps(8);
-    background-color: rgba(180, 180, 180, 0.2);
-    border-radius: 4px;
-    transition: all 0.2s ease;
+    background-color: var(--module-bg);
+    padding: 4px 8px;
+    border-radius: 12px;
+    transition: background-color 0.2s ease;
+}
+
+#vinyl-button:hover {
+    background-color: var(--light-bg);
 }
 
 /* Active state styling */
-.active #vinyl-button {
-    background-color: rgba(108, 158, 175, 0.7);
-    padding: 0px 32px;
+#vinyl-button.active {
+    background-color: var(--pink);
+}
+
+#vinyl-button.active:hover {
+    background-color: var(--turquoise);
 }
 
 /* Icon styling */
 #vinyl-icon {
-    color: #555555;
-    min-width: 36px;
+    color: var(--foreground);
 }
 
-/* Label styling */
-#vinyl-label {
-    color: #333333;
-}
-
-/* Active state changes for icon and label */
-.active #vinyl-icon,
-.active #vinyl-label {
-    color: var(--pink);
-    padding: 0px 32px;
-}
-
-/* Hover effect */
-#vinyl-button:hover {
-    background-color: rgba(180, 180, 180, 0.4);
-}
-
-.active #vinyl-button:hover {
-    background-color: rgba(108, 158, 175, 0.9);
+#vinyl-button.active #vinyl-icon {
+    color: var(--background);
 }
