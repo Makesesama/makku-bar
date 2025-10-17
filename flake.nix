@@ -88,6 +88,11 @@
                     default = 40;
                     description = "Height of the status bar in pixels";
                   };
+                  logLevel = lib.mkOption {
+                    type = lib.types.enum [ "TRACE" "DEBUG" "INFO" "SUCCESS" "WARNING" "ERROR" "CRITICAL" ];
+                    default = "WARNING";
+                    description = "Log level for the status bar (loguru levels: TRACE, DEBUG, INFO, SUCCESS, WARNING, ERROR, CRITICAL)";
+                  };
                   window_title = {
                     enable = lib.mkOption {
                       type = lib.types.bool;
@@ -135,6 +140,7 @@
                 vinyl.enable = false;
                 battery.enable = false;
                 height = 40;
+                logLevel = "WARNING";
                 window_title.enable = true;
                 stylix.enable = false;
                 calendar = {

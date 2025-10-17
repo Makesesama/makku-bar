@@ -1,15 +1,15 @@
 from loguru import logger
 
 # Configure logging based on dev flag
-from .config import DEV
+from .config import DEV, LOG_LEVEL
 if DEV:
     # In dev mode, disable fabric logs but keep stylix and bar logs
     logger.disable("fabric")
 else:
-    # In production, disable fabric logs but keep bar logs for debugging
+    # In production, disable fabric logs but keep bar logs with configurable level
     import sys
     logger.disable("fabric")
-    logger.configure(handlers=[{"sink": sys.stderr, "level": "INFO", "format": "{time} | {level} | {name}:{function}:{line} - {message}"}])
+    logger.configure(handlers=[{"sink": sys.stderr, "level": LOG_LEVEL, "format": "{time} | {level} | {name}:{function}:{line} - {message}"}])
 
 from fabric import Application
 from fabric.system_tray.widgets import SystemTray
