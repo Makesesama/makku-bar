@@ -13,6 +13,10 @@ notmuch:
     enable: true
     notmuch_path: "notmuch"  # or full path like "/home/user/.nix-profile/bin/notmuch"
     emacsclient_command: "emacsclient"  # or full path like "/home/user/.nix-profile/bin/emacsclient"
+notifications:
+    enable: true
+    max_history: 50
+    bubble_timeout: 5000
 stylix:
     enable: true
     colors:

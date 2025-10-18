@@ -6,6 +6,7 @@
 @import url("./finder.css");
 @import url("./calendar.css");
 @import url("./notmuch.css");
+@import url("./notifications.css");
 
 
 /* unset so we can style everything from the ground up. */

@@ -11,6 +11,7 @@ from bar.modules.quick_menu import QuickMenuOpener
 from bar.modules.battery import Battery
 from bar.modules.calendar import CalendarService, CalendarPopup
 from bar.modules.notmuch import NotmuchWidget
+from bar.modules.notifications import NotificationManager
 from fabric.widgets.wayland import WaylandWindow as Window
 from fabric.system_tray.widgets import SystemTray
 from fabric.river.widgets import (
@@ -22,7 +23,7 @@ from fabric.river.widgets import (
 from fabric.widgets.circularprogressbar import CircularProgressBar
 from bar.services.system_stats import SystemStatsService
 
-from bar.config import VINYL, BATTERY, BAR_HEIGHT, WINDOW_TITLE, NOTMUCH
+from bar.config import VINYL, BATTERY, BAR_HEIGHT, WINDOW_TITLE, NOTMUCH, NOTIFICATIONS
 
 
 class StatusBar(Window):
@@ -113,6 +114,11 @@ class StatusBar(Window):
         if NOTMUCH["enable"]:
             self.notmuch = NotmuchWidget()
 
+        # Initialize notification system
+        self.notification_manager = None
+        if NOTIFICATIONS["enable"]:
+            self.notification_manager = NotificationManager()
+
         self.status_container = Box(
             name="widgets-container",
             spacing=4,
@@ -131,6 +137,10 @@ class StatusBar(Window):
 
         if self.notmuch:
             end_container_children.append(self.notmuch)
+
+        # Add notification indicator if enabled
+        if self.notification_manager:
+            end_container_children.append(self.notification_manager.get_indicator())
 
         # Add quick menu button next to time
         end_container_children.append(self.quick_menu)

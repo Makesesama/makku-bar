@@ -3,10 +3,10 @@ import tempfile
 import os
 
 
-def generate_stylix_css():
-    """Generate CSS using Stylix colors if enabled"""
+def generate_stylix_variables():
+    """Generate CSS variables from Stylix configuration for use with regular CSS files"""
     if not STYLIX.get("enable", False):
-        return None
+        return ""
 
     colors = STYLIX.get("colors", {})
     fonts = STYLIX.get("fonts", {})
@@ -36,332 +36,51 @@ def generate_stylix_css():
         if key not in colors:
             colors[key] = default_colors[key]
 
-    # Default font
-    font_family = fonts.get("sansSerif", "sans-serif")
-    font_sizes = fonts.get("sizes", {})
-    # Use desktop font size for the bar, fallback to applications, then default
-    font_size = font_sizes.get("desktop", font_sizes.get("applications", 14))
+    # Generate :vars block matching the original colors.css structure
+    css_variables = f""":vars {{
+    /* Base background colors */
+    --background: #{colors["base00"]};
+    --mid-bg: #{colors["base01"]};
+    --light-bg: #{colors["base02"]};
+    --dark-grey: #{colors["base03"]};
+    --light-grey: #{colors["base04"]};
+    --dark-fg: #{colors["base04"]};
+    --mid-fg: #{colors["base05"]};
+    --foreground: #{colors["base05"]};
 
-    # Calculate relative font sizes
-    small_font = max(int(font_size * 0.85), 10)  # Minimum 10px
-    large_font = int(font_size * 1.1)
+    /* Accent colors mapped to original names */
+    --pink: #{colors["base08"]};
+    --orange: #{colors["base09"]};
+    --gold: #{colors["base0A"]};
+    --lime: #{colors["base0B"]};
+    --turquoise: #{colors["base0C"]};
+    --blue: #{colors["base0D"]};
+    --violet: #{colors["base0E"]};
+    --red: #{colors["base08"]};
 
-    # Debug logging
-    from loguru import logger
-    logger.info(f"[Stylix] Using font sizes - Base: {font_size}px, Small: {small_font}px, Large: {large_font}px")
+    /* Derived colors matching original structure */
+    --window-bg: alpha(var(--background), 0.9);
+    --module-bg: alpha(var(--mid-bg), 0.8);
+    --border-color: var(--light-bg);
+    --ws-active: var(--pink);
+    --ws-inactive: var(--blue);
+    --ws-empty: var(--dark-grey);
+    --ws-hover: var(--turquoise);
+    --ws-urgent: var(--red);
 
-    # Generate GTK CSS with Stylix colors
-    css_content = f"""/* Stylix-generated theme */
+    /* Additional Base16 colors for notifications */
+    --border: #{colors["base02"]};
+    --accent: #{colors["base0D"]};
+    --warning: #{colors["base09"]};
+    --error: #{colors["base08"]};
+    --success: #{colors["base0B"]};
 
-/* Apply Stylix font */
-* {{
-    font-family: "{font_family}", sans-serif;
-    font-size: {font_size}px;
+    /* Missing variables that notifications.css expects */
+    --background-alt: #{colors["base01"]};
+    --background-selected: #{colors["base02"]};
+    --foreground-alt: #{colors["base04"]};
 }}
 
-/* Bar styling */
-#bar-inner {{
-    padding: 4px;
-    border-bottom: solid 2px;
-    border-color: #{colors["base02"]};
-    background-color: #{colors["base00"]};
-}}
-
-#center-container {{
-    color: #{colors["base05"]};
-}}
-
-.active-window {{
-    color: #{colors["base05"]};
-    font-weight: bold;
-}}
-
-/* Battery */
-#battery-widget {{
-    background-color: #{colors["base01"]};
-    padding: 4px 8px;
-    border-radius: 12px;
-}}
-
-#bat-icon {{
-    color: #{colors["base0D"]};
-    margin-right: 2px;
-}}
-
-#bat-label {{
-    color: #{colors["base05"]};
-    font-size: {font_size}px;
-}}
-
-#bat-label.battery-low {{
-    color: #{colors["base08"]};
-    font-weight: bold;
-}}
-
-/* Progress bars */
-#cpu-progress-bar,
-#ram-progress-bar,
-#volume-progress-bar {{
-    color: transparent;
-    background-color: transparent;
-}}
-
-#cpu-progress-bar {{
-    border: solid 0px alpha(#{colors["base0E"]}, 0.8);
-}}
-
-#ram-progress-bar,
-#volume-progress-bar {{
-    border: solid 0px #{colors["base0D"]};
-}}
-
-/* Widgets container */
-#widgets-container {{
-    background-color: #{colors["base01"]};
-    padding: 2px;
-    border-radius: 16px;
-}}
-
-/* NixOS label */
-#nixos-label {{
-    color: #{colors["base0D"]};
-}}
-
-/* Date time */
-#date-time {{
-    color: #{colors["base05"]};
-    background-color: #{colors["base01"]};
-    padding: 4px 8px;
-    border-radius: 12px;
-}}
-
-#date-time-button {{
-    background: transparent;
-    border: none;
-    padding: 0;
-    margin: 0;
-    box-shadow: none;
-}}
-
-/* Generic popup styling */
-.popup-window,
-#calendar-popup,
-#quick-menu {{
-    background-color: #{colors["base00"]};
-    border: solid 2px #{colors["base02"]};
-    border-radius: 12px;
-    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
-    animation: slide-down 200ms ease-out;
-}}
-
-@keyframes slide-down {{
-    from {{
-        opacity: 0;
-        margin-top: -20px;
-    }}
-    to {{
-        opacity: 1;
-        margin-top: 10px;
-    }}
-}}
-
-#calendar-title {{
-    color: #{colors["base05"]};
-    font-weight: bold;
-    font-size: {large_font}px;
-    margin-bottom: 8px;
-}}
-
-#events-box {{
-    background-color: #{colors["base00"]};
-    border: solid 1px #{colors["base02"]};
-    border-radius: 8px;
-    padding: 16px;
-}}
-
-#no-events {{
-    color: #{colors["base03"]};
-}}
-
-/* Calendar event items */
-.event-item {{
-    border-radius: 6px;
-    padding: 8px 12px;
-    margin: 4px 0px;
-    transition: background-color 0.15s ease;
-}}
-
-#event-content {{
-    margin-left: 8px;
-}}
-
-.event-item.upcoming {{
-    background-color: #{colors["base01"]};
-}}
-
-.event-item.past {{
-    background-color: #{colors["base01"]};
-    opacity: 0.6;
-}}
-
-.event-title {{
-    font-weight: bold;
-    font-size: {font_size}px;
-}}
-
-.event-title.upcoming {{
-    color: #{colors["base05"]};
-}}
-
-.event-title.past {{
-    color: #{colors["base04"]};
-}}
-
-.event-time {{
-    font-size: {small_font}px;
-}}
-
-.event-time.upcoming {{
-    color: #{colors["base04"]};
-}}
-
-.event-time.past {{
-    color: #{colors["base03"]};
-}}
-
-.event-location {{
-    font-size: {small_font}px;
-}}
-
-.event-location.upcoming {{
-    color: #{colors["base03"]};
-}}
-
-.event-location.past {{
-    color: #{colors["base03"]};
-    opacity: 0.8;
-}}
-
-/* Tooltips */
-tooltip {{
-    border: solid 2px;
-    border-color: #{colors["base02"]};
-    background-color: #{colors["base00"]};
-    color: #{colors["base05"]};
-    border-radius: 16px;
-}}
-
-tooltip>* {{
-    padding: 2px 4px;
-}}
-
-/* Workspaces */
-#workspaces {{
-    background-color: #{colors["base01"]};
-    padding: 6px 6px;
-    border-radius: 16px;
-}}
-
-#workspaces>button {{
-    background-color: #{colors["base05"]};
-    border-radius: 100px;
-    padding: 0px 4px;
-    transition: padding 0.05s steps(8);
-}}
-
-#workspaces>button.active {{
-    background-color: #{colors["base0D"]};
-    padding: 0px 16px;
-    border-radius: 100px;
-}}
-
-#workspaces>button>label {{
-    font-size: 0px;
-}}
-
-#workspaces>button.empty:not(.active) {{
-    background-color: #{colors["base03"]};
-}}
-
-#workspaces>button.urgent {{
-    background-color: #{colors["base08"]};
-}}
-
-/* Quick Menu styling */
-#quick-menu-container {{
-    background-color: #{colors["base00"]};
-    border-radius: 8px;
-}}
-
-#quick-menu-button {{
-    background: transparent;
-    border: none;
-    padding: 4px;
-    margin: 0;
-    box-shadow: none;
-    color: #{colors["base05"]};
-}}
-
-#quick-menu-button:hover {{
-    background-color: #{colors["base01"]};
-    border-radius: 8px;
-}}
-
-.quick-menu-item {{
-    border-radius: 6px;
-    transition: background-color 0.15s ease;
-}}
-
-.quick-menu-item:hover {{
-    background-color: #{colors["base01"]};
-}}
-
-.section-title {{
-    color: #{colors["base04"]};
-    font-weight: bold;
-    font-size: {small_font}px;
-}}
-
-/* Vinyl button styling */
-#vinyl-button {{
-    background-color: transparent;
-    color: #{colors["base05"]};
-    border: none;
-    padding: 4px;
-    margin: 0px;
-    border-radius: 8px;
-}}
-
-#vinyl-button.active {{
-    background-color: #{colors["base0B"]};
-    color: #{colors["base00"]};
-}}
-
-#vinyl-icon {{
-    color: inherit;
-}}
-
-/* Toggle switch styling for quick menu */
-.toggle-active {{
-    background-color: #{colors["base0B"]};
-}}
-
-.toggle-inactive {{
-    background-color: #{colors["base02"]};
-}}
 """
 
-    # Write to temporary file
-    temp_fd, temp_path = tempfile.mkstemp(suffix=".css", prefix="stylix_")
-    try:
-        with os.fdopen(temp_fd, "w") as f:
-            f.write(css_content)
-        return temp_path
-    except Exception:
-        os.close(temp_fd)
-        return None
-
-
-def get_stylix_css_path():
-    """Get the path to the Stylix CSS file"""
-    return generate_stylix_css()
+    return css_variables

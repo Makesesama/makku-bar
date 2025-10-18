@@ -1,0 +1,190 @@
+/* Notification bubble window styling */
+window#notification-bubble-window {
+    background: transparent;
+    border: none;
+}
+
+/* Notification content styling to match bar exactly */
+#notification {
+    background-color: var(--window-bg);
+    border: none;
+    border-radius: 0px 0px 24px 24px;
+    padding: 8px 16px;
+}
+
+/* Notification viewport - smooth animation */
+#notification-viewport {
+    transition: all 0.3s ease-in-out;
+}
+
+/* Animation states */
+#notification-viewport.collapsed {
+    opacity: 0;
+    margin-top: -50px;
+}
+
+#notification-viewport.expanded {
+    opacity: 1;
+    margin-top: 0px;
+}
+
+/* Notification text styling */
+.summary {
+    color: var(--foreground);
+    font-size: 16px;
+    font-weight: bold;
+    text-shadow: none;
+}
+
+.body {
+    color: var(--foreground-alt);
+    font-size: 14px;
+    margin-top: 4px;
+}
+
+#notification-icon {
+    margin-right: 12px;
+    color: var(--blue);
+}
+
+#notification-content {
+    padding: 0;
+}
+
+#notification-summary {
+    color: var(--foreground);
+    font-weight: bold;
+    font-size: 14px;
+}
+
+#notification-close {
+    background: transparent;
+    border: none;
+    border-radius: 6px;
+    padding: 6px;
+    margin-left: 12px;
+    opacity: 0.7;
+    transition: opacity 0.2s, background 0.2s;
+}
+
+#notification-close:hover {
+    opacity: 1.0;
+    background: var(--background-selected);
+}
+
+/* Notification indicator styling */
+#notification-indicator {
+    background: transparent;
+    border: none;
+    border-radius: 6px;
+    padding: 6px 10px;
+    transition: background 0.2s;
+}
+
+#notification-indicator:hover {
+    background: var(--background-selected);
+}
+
+#notification-indicator-icon {
+    color: var(--foreground);
+}
+
+#notification-count {
+    background: var(--accent);
+    color: var(--background);
+    border-radius: 10px;
+    padding: 2px 6px;
+    font-size: 12px;
+    font-weight: bold;
+    min-width: 16px;
+}
+
+/* Notification sidebar styling */
+#notification-sidebar {
+    background: var(--background);
+    border: 2px solid var(--border);
+    border-radius: 12px;
+    min-width: 350px;
+    min-height: 400px;
+}
+
+#notification-sidebar-content {
+    padding: 16px;
+}
+
+#notification-header {
+    border-bottom: 1px solid var(--border);
+    padding-bottom: 12px;
+    margin-bottom: 12px;
+}
+
+#notification-sidebar-title {
+    font-size: 18px;
+    font-weight: bold;
+    color: var(--foreground);
+}
+
+#notification-clear-all {
+    background: var(--background-alt);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    padding: 4px 8px;
+    font-size: 12px;
+    transition: background 0.2s;
+}
+
+#notification-clear-all:hover {
+    background: var(--background-selected);
+}
+
+/* Notification list styling */
+#notification-list {
+}
+
+#notification-item {
+    background: var(--background-alt);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 12px;
+    margin-bottom: 8px;
+    transition: background 0.2s;
+}
+
+#notification-item:hover {
+    background: var(--background-selected);
+}
+
+#notification-item.dismissed {
+    opacity: 0.6;
+}
+
+#notification-item-header {
+    font-size: 12px;
+    color: var(--foreground-alt);
+    margin-bottom: 4px;
+}
+
+#notification-item-summary {
+    font-weight: 600;
+    color: var(--foreground);
+    margin-bottom: 2px;
+}
+
+#notification-item-body {
+    font-size: 14px;
+    color: var(--foreground-alt);
+}
+
+#notification-item-dismiss {
+    background: transparent;
+    border: none;
+    border-radius: 4px;
+    padding: 4px;
+    opacity: 0.6;
+    transition: opacity 0.2s, background 0.2s;
+}
+
+#notification-item-dismiss:hover {
+    opacity: 1.0;
+    background: var(--background-selected);
+}

@@ -22,7 +22,7 @@ from fabric.utils import (
 )
 from .modules.bar import StatusBar
 from .modules.window_fuzzy import FuzzyWindowFinder
-from .modules.stylix import get_stylix_css_path
+from .modules.stylix import generate_stylix_variables
 from .config import STYLIX
 
 
@@ -36,21 +36,62 @@ bar_windows = []
 
 app = Application("bar", dummy, finder)
 
-# Load CSS - use Stylix if enabled, otherwise use default
+# Load CSS with unified system
+# Read main.css which includes all imports
+try:
+    main_css_path = get_relative_path("styles/main.css")
+    with open(main_css_path, 'r') as f:
+        main_css = f.read()
+except FileNotFoundError:
+    logger.error("[Bar] main.css not found!")
+    main_css = ""
+
+# Remove notifications.css import from main.css since we'll add it manually at the end
+main_css = main_css.replace('@import url("./notifications.css");', '/* notifications.css added manually at end */')
+
+# Read notifications.css separately so we can add it AFTER the universal reset
+try:
+    notifications_css_path = get_relative_path("styles/notifications.css")
+    with open(notifications_css_path, 'r') as f:
+        notifications_css = f.read()
+except FileNotFoundError:
+    logger.warning("[Bar] notifications.css not found!")
+    notifications_css = ""
+
 if STYLIX.get("enable", False):
-    stylix_css_path = get_stylix_css_path()
-    if stylix_css_path:
-        logger.info("[Bar] Using Stylix CSS")
-        # Load base styles first for structure
-        app.set_stylesheet_from_file(get_relative_path("styles/main.css"))
-        # Then apply Stylix theme colors
-        app.set_stylesheet_from_file(stylix_css_path)
+    logger.info("[Bar] Using Stylix CSS variables")
+
+    # Generate Stylix variables and replace colors.css
+    stylix_vars = generate_stylix_variables()
+    logger.info(f"[Bar] Generated {len(stylix_vars)} characters of Stylix variables")
+
+    original_css = main_css
+    main_css = main_css.replace('@import url("./colors.css");', '/* colors.css replaced by Stylix variables */')
+
+    if original_css == main_css:
+        logger.warning("[Bar] colors.css import not found or not replaced!")
     else:
-        logger.warning("[Bar] Stylix enabled but CSS generation failed, falling back to default")
-        app.set_stylesheet_from_file(get_relative_path("styles/main.css"))
+        logger.info("[Bar] Successfully replaced colors.css import")
+
+    # Combine: Stylix variables + notifications CSS (before reset) + main CSS + notifications CSS (after reset)
+    combined_css = stylix_vars + "\n\n/* === NOTIFICATION STYLES BEFORE RESET === */\n" + notifications_css + "\n\n" + main_css + "\n\n/* === NOTIFICATION STYLES AFTER RESET === */\n" + notifications_css
+    logger.info(f"[Bar] Combined CSS length: {len(combined_css)} characters")
 else:
-    logger.info("[Bar] Using default CSS")
-    app.set_stylesheet_from_file(get_relative_path("styles/main.css"))
+    logger.info("[Bar] Using default CSS with original colors.css")
+    # Combine: notifications CSS (before reset) + main CSS + notifications CSS (after reset)
+    combined_css = "\n\n/* === NOTIFICATION STYLES BEFORE RESET === */\n" + notifications_css + "\n\n" + main_css + "\n\n/* === NOTIFICATION STYLES AFTER RESET === */\n" + notifications_css
+
+# Debug: Write combined CSS to file for inspection
+debug_css_path = "/tmp/makku_bar_combined.css"
+try:
+    with open(debug_css_path, 'w') as f:
+        f.write(combined_css)
+    logger.info(f"[Bar] Debug: Combined CSS written to {debug_css_path}")
+except Exception as e:
+    logger.warning(f"[Bar] Could not write debug CSS: {e}")
+
+# Always use compile_css for consistent processing
+app.set_stylesheet_from_string(combined_css, compile=True, base_path=get_relative_path("styles"))
 
 
 def spawn_bars():
@@ -66,6 +107,13 @@ def spawn_bars():
     for i, output_id in enumerate(output_ids):
         bar = StatusBar(display=output_id, tray=tray if i == 0 else None, monitor=i)
         bar_windows.append(bar)
+
+        # Add notification windows for first monitor only
+        if i == 0 and bar.notification_manager:
+            sidebar = bar.notification_manager.get_sidebar()
+            bubble = bar.notification_manager.get_bubble()
+            app.add_window(sidebar)
+            app.add_window(bubble)
 
     return False
 
