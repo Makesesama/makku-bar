@@ -37,6 +37,9 @@
           makku = pkgs.writeShellScriptBin "makku" ''
             dbus-send --session --print-reply --dest=org.Fabric.fabric.bar  /org/Fabric/fabric org.Fabric.fabric.Evaluate string:"finder.show()" > /dev/null 2>&1
           '';
+          notmuch-refresh = pkgs.writeShellScriptBin "notmuch-refresh" ''
+            dbus-send --session --print-reply --dest=org.Fabric.fabric.bar /org/Fabric/fabric org.Fabric.fabric.Evaluate string:"notmuch_widget.service.update_unread_count() if notmuch_widget else None" > /dev/null 2>&1
+          '';
         };
         apps.default = {
           type = "app";

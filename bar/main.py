@@ -33,6 +33,7 @@ dummy = Window(visible=False)
 finder = FuzzyWindowFinder()
 
 bar_windows = []
+notmuch_widget = None
 
 app = Application("bar", dummy, finder)
 
@@ -54,6 +55,7 @@ else:
 
 
 def spawn_bars():
+    global notmuch_widget
     logger.info("[Bar] Spawning bars after river ready")
     outputs = river.outputs
 
@@ -66,6 +68,8 @@ def spawn_bars():
     for i, output_id in enumerate(output_ids):
         bar = StatusBar(display=output_id, tray=tray if i == 0 else None, monitor=i)
         bar_windows.append(bar)
+        if i == 0 and bar.notmuch:
+            notmuch_widget = bar.notmuch
 
     return False
 
