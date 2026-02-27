@@ -13,12 +13,8 @@ from bar.modules.calendar import CalendarService, CalendarPopup
 from bar.modules.notmuch import NotmuchWidget
 from fabric.widgets.wayland import WaylandWindow as Window
 from fabric.system_tray.widgets import SystemTray
-from fabric.river.widgets import (
-    RiverWorkspaces,
-    RiverWorkspaceButton,
-    RiverActiveWindow,
-    get_river_connection,
-)
+from bar.widgets.fenster import FensterWorkspaces, FensterWorkspaceButton, FensterActiveWindow
+from bar.services.fenster import get_i3_connection
 from fabric.widgets.circularprogressbar import CircularProgressBar
 from bar.services.system_stats import SystemStatsService
 
@@ -28,10 +24,9 @@ from bar.config import VINYL, BATTERY, BAR_HEIGHT, WINDOW_TITLE, NOTMUCH
 class StatusBar(Window):
     def __init__(
         self,
-        display: int,
+        display: str,
         tray: SystemTray | None = None,
         monitor: int = 1,
-        river_service=None,
     ):
         super().__init__(
             name="bar",
@@ -43,17 +38,11 @@ class StatusBar(Window):
             all_visible=False,
             monitor=monitor,
         )
-        if river_service:
-            self.river = river_service
-        else:
-            self.river = get_river_connection()
 
-        self.workspaces = RiverWorkspaces(
-            display,
+        self.workspaces = FensterWorkspaces(
+            output=display,
             name="workspaces",
             spacing=4,
-            buttons_factory=lambda ws_id: RiverWorkspaceButton(id=ws_id, label=None),
-            river_service=self.river,
         )
         # Create calendar components (refresh every 2 minutes)
         self.calendar_service = CalendarService(update_interval=120000)
@@ -74,7 +63,7 @@ class StatusBar(Window):
         self.calendar_service.connect("events-changed", self.update_calendar_display)
         self.system_tray = tray
 
-        self.active_window = RiverActiveWindow(
+        self.active_window = FensterActiveWindow(
             name="active-window",
             max_length=50,
             style="color: #ffffff; font-size: 14px; font-weight: bold;",

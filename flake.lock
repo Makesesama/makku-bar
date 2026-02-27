@@ -6,15 +6,15 @@
         "utils": "utils"
       },
       "locked": {
-        "lastModified": 1747045720,
-        "narHash": "sha256-2Z0F4hnluJZunwRfx80EQXpjGLhunV2wrseT42nzh7M=",
-        "owner": "Makesesama",
+        "lastModified": 1770146720,
+        "narHash": "sha256-YVlwsUz4SLj8qYAb21ernT3lDB/piU1V6hTW/UjikWA=",
+        "owner": "Fabric-Development",
         "repo": "fabric",
-        "rev": "dae50c763e8bf2b4e5807b49b9e62425e0725cfa",
+        "rev": "fd2aabbd7e1859aa7c11c626a6c36a937aca736a",
         "type": "github"
       },
       "original": {
-        "owner": "Makesesama",
+        "owner": "Fabric-Development",
         "repo": "fabric",
         "type": "github"
       }

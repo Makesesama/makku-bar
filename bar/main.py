@@ -12,11 +12,9 @@ else:
     logger.configure(handlers=[{"sink": sys.stderr, "level": LOG_LEVEL, "format": "{time} | {level} | {name}:{function}:{line} - {message}"}])
 
 from fabric import Application
+from fabric.i3 import I3, I3MessageType
 from fabric.system_tray.widgets import SystemTray
 from fabric.widgets.wayland import WaylandWindow as Window
-from fabric.river.widgets import (
-    get_river_connection,
-)
 from fabric.utils import (
     get_relative_path,
 )
@@ -24,10 +22,11 @@ from .modules.bar import StatusBar
 from .modules.window_fuzzy import FuzzyWindowFinder
 from .modules.stylix import get_stylix_css_path
 from .config import STYLIX
+from .services.fenster import get_i3_connection
 
 
 tray = SystemTray(name="system-tray", spacing=4)
-river = get_river_connection()
+i3 = get_i3_connection()
 
 dummy = Window(visible=False)
 finder = FuzzyWindowFinder()
@@ -56,17 +55,22 @@ else:
 
 def spawn_bars():
     global notmuch_widget
-    logger.info("[Bar] Spawning bars after river ready")
-    outputs = river.outputs
+    logger.info("[Bar] Spawning bars")
+    outputs_reply = I3.send_command("", I3MessageType.GET_OUTPUTS)
 
-    if not outputs:
-        logger.warning("[Bar] No outputs found — skipping bar spawn")
+    if not (outputs_reply.is_ok and isinstance(outputs_reply.reply, list)):
+        logger.warning("[Bar] Failed to get outputs — skipping bar spawn")
         return
 
-    output_ids = sorted(outputs.keys())
+    outputs = [o for o in outputs_reply.reply if o.get("active")]
 
-    for i, output_id in enumerate(output_ids):
-        bar = StatusBar(display=output_id, tray=tray if i == 0 else None, monitor=i)
+    if not outputs:
+        logger.warning("[Bar] No active outputs found — skipping bar spawn")
+        return
+
+    for i, output in enumerate(outputs):
+        output_name = output.get("name", f"Unknown-{i}")
+        bar = StatusBar(display=output_name, tray=tray if i == 0 else None, monitor=i)
         bar_windows.append(bar)
         if i == 0 and bar.notmuch:
             notmuch_widget = bar.notmuch
@@ -75,10 +79,10 @@ def spawn_bars():
 
 
 def main():
-    if river.ready:
+    if i3.ready:
         spawn_bars()
     else:
-        river.connect("notify::ready", lambda sender, pspec: spawn_bars())
+        i3.connect("notify::ready", lambda *_: spawn_bars())
 
     app.run()
 
