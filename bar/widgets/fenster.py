@@ -2,6 +2,8 @@
 Fenster widgets for workspace and window management via sway IPC.
 """
 
+from gi.repository import GLib
+
 from fabric.i3 import I3, I3Event, I3MessageType
 from fabric.utils.helpers import bulk_connect
 from fabric.widgets.box import Box
@@ -39,7 +41,7 @@ class FensterWorkspaceButton(Button):
         return self._workspace_num
 
     def _on_clicked(self, *args):
-        self._i3.send_command(f"workspace {self._workspace_num}")
+        self._i3.send_command(f"workspace number {self._workspace_num}")
 
     def _toggle_class(self, name: str, on: bool):
         if on:
@@ -61,13 +63,14 @@ class FensterWorkspaceButton(Button):
 
 
 class FensterWorkspaces(Box):
-    """Container widget showing all workspaces"""
+    """Container widget showing a fixed set of workspace bubbles (1..N)."""
 
     def __init__(
         self,
         output: str | None = None,
         i3: I3 | None = None,
         buttons_factory=None,
+        workspace_count: int = 9,
         **kwargs,
     ):
         super().__init__(
@@ -78,35 +81,56 @@ class FensterWorkspaces(Box):
         )
 
         self._output = output
+        self._workspace_count = workspace_count
         self._i3 = i3 or get_i3_connection()
         self._buttons_factory = buttons_factory or self._default_button_factory
-        self._buttons = {}
+        self._buttons: dict[int, FensterWorkspaceButton] = {}
+        self._refresh_pending = False
+
+        # Pre-create one button per workspace slot so position N always means workspace N.
+        for n in range(1, workspace_count + 1):
+            button = self._buttons_factory(n)
+            self._buttons[n] = button
+            self.add(button)
 
         bulk_connect(
             self._i3,
             {
-                "event::workspace::focus": self._on_workspace_event,
-                "event::workspace::init": self._on_workspace_event,
-                "event::workspace::empty": self._on_workspace_event,
-                "event::workspace::urgent": self._on_workspace_event,
-                "event::window::new": self._on_window_event,
-                "event::window::close": self._on_window_event,
+                "event::workspace::focus": self._on_event,
+                "event::workspace::init": self._on_event,
+                "event::workspace::empty": self._on_event,
+                "event::workspace::urgent": self._on_event,
+                "event::workspace::move": self._on_event,
+                "event::window::focus": self._on_event,
+                "event::window::new": self._on_event,
+                "event::window::close": self._on_event,
             },
         )
 
         if self._i3.ready:
-            self._refresh_workspaces()
+            self._schedule_refresh()
         else:
-            self._i3.connect("notify::ready", lambda *_: self._refresh_workspaces())
+            self._i3.connect("notify::ready", lambda *_: self._schedule_refresh())
 
     def _default_button_factory(self, workspace_num: int) -> FensterWorkspaceButton:
         return FensterWorkspaceButton(workspace_num=workspace_num, i3=self._i3)
 
-    def _on_workspace_event(self, _, event: I3Event):
-        self._refresh_workspaces()
+    def _on_event(self, _, event: I3Event):
+        self._schedule_refresh()
 
-    def _on_window_event(self, _, event: I3Event):
+    def _schedule_refresh(self):
+        # Defer to the next idle tick — fenster's internal state is not always
+        # updated synchronously when an event fires, so querying GET_WORKSPACES
+        # immediately can return the pre-event view.
+        if self._refresh_pending:
+            return
+        self._refresh_pending = True
+        GLib.idle_add(self._refresh_idle)
+
+    def _refresh_idle(self):
+        self._refresh_pending = False
         self._refresh_workspaces()
+        return False
 
     def _refresh_workspaces(self):
         reply = I3.send_command("", I3MessageType.GET_WORKSPACES)
@@ -114,26 +138,18 @@ class FensterWorkspaces(Box):
             self._update_workspaces(reply.reply)
 
     def _update_workspaces(self, workspaces: list):
-        workspace_nums = {ws["num"] for ws in workspaces if ws.get("num") is not None}
+        ws_by_num = {
+            ws["num"]: ws for ws in workspaces if ws.get("num") is not None
+        }
 
-        # Remove buttons for workspaces that no longer exist
-        for ws_num in list(self._buttons.keys()):
-            if ws_num not in workspace_nums:
-                button = self._buttons.pop(ws_num)
-                self.remove(button)
-
-        # Add/update buttons for current workspaces
-        for ws in sorted(workspaces, key=lambda w: w.get("num", 0)):
-            ws_num = ws.get("num")
-            if ws_num is None:
+        for n, button in self._buttons.items():
+            ws = ws_by_num.get(n)
+            if ws is None:
+                button.set_active(False)
+                button.set_visible_other(False)
+                button.set_urgent(False)
+                button.set_empty(True)
                 continue
-
-            if ws_num not in self._buttons:
-                button = self._buttons_factory(ws_num)
-                self._buttons[ws_num] = button
-                self.add(button)
-
-            button = self._buttons[ws_num]
 
             focused = bool(ws.get("focused"))
             visible = bool(ws.get("visible"))
@@ -141,15 +157,10 @@ class FensterWorkspaces(Box):
             window_count = ws.get("window_count", 0)
 
             button.set_active(focused)
-            # "visible on another output": shown on its output but not the focused one
+            # Visible on its output but not the focused one → shown on another monitor.
             button.set_visible_other(visible and not focused)
             button.set_urgent(urgent)
             button.set_empty(window_count == 0)
-
-        # Sort buttons by workspace number
-        sorted_buttons = sorted(self._buttons.values(), key=lambda b: b.workspace_num)
-        for i, button in enumerate(sorted_buttons):
-            self.reorder_child(button, i)
 
         self.show_all()
 
