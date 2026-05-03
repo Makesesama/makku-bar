@@ -41,23 +41,23 @@ class FensterWorkspaceButton(Button):
     def _on_clicked(self, *args):
         self._i3.send_command(f"workspace {self._workspace_num}")
 
-    def set_focused(self, focused: bool):
-        if focused:
-            self.add_style_class("focused")
+    def _toggle_class(self, name: str, on: bool):
+        if on:
+            self.add_style_class(name)
         else:
-            self.remove_style_class("focused")
+            self.remove_style_class(name)
 
-    def set_visible_on_output(self, visible: bool):
-        if visible:
-            self.add_style_class("visible")
-        else:
-            self.remove_style_class("visible")
+    def set_active(self, active: bool):
+        self._toggle_class("active", active)
 
-    def set_has_windows(self, has_windows: bool):
-        if has_windows:
-            self.add_style_class("has-windows")
-        else:
-            self.remove_style_class("has-windows")
+    def set_visible_other(self, visible: bool):
+        self._toggle_class("visible", visible)
+
+    def set_empty(self, empty: bool):
+        self._toggle_class("empty", empty)
+
+    def set_urgent(self, urgent: bool):
+        self._toggle_class("urgent", urgent)
 
 
 class FensterWorkspaces(Box):
@@ -114,14 +114,7 @@ class FensterWorkspaces(Box):
             self._update_workspaces(reply.reply)
 
     def _update_workspaces(self, workspaces: list):
-        focused_ws = None
-        workspace_nums = set()
-        for ws in workspaces:
-            ws_num = ws.get("num")
-            if ws_num is not None:
-                workspace_nums.add(ws_num)
-                if ws.get("focused"):
-                    focused_ws = ws_num
+        workspace_nums = {ws["num"] for ws in workspaces if ws.get("num") is not None}
 
         # Remove buttons for workspaces that no longer exist
         for ws_num in list(self._buttons.keys()):
@@ -141,14 +134,17 @@ class FensterWorkspaces(Box):
                 self.add(button)
 
             button = self._buttons[ws_num]
-            button.set_focused(ws_num == focused_ws)
 
-            ws_output = ws.get("output")
-            is_visible = ws_output == self._output if self._output is not None else False
-            button.set_visible_on_output(is_visible)
-
+            focused = bool(ws.get("focused"))
+            visible = bool(ws.get("visible"))
+            urgent = bool(ws.get("urgent"))
             window_count = ws.get("window_count", 0)
-            button.set_has_windows(window_count > 0)
+
+            button.set_active(focused)
+            # "visible on another output": shown on its output but not the focused one
+            button.set_visible_other(visible and not focused)
+            button.set_urgent(urgent)
+            button.set_empty(window_count == 0)
 
         # Sort buttons by workspace number
         sorted_buttons = sorted(self._buttons.values(), key=lambda b: b.workspace_num)

@@ -6,8 +6,8 @@
 
 #workspaces>button {
     padding: 0px 8px;
-    transition: padding 0.05s steps(8);
-    background-color: var(--foreground);
+    transition: padding 0.05s steps(8), background-color 0.15s ease;
+    background-color: var(--ws-inactive);
     border-radius: 100px;
 }
 
@@ -15,11 +15,24 @@
     font-size: 0px;
 }
 
-#workspaces button.hover {
+#workspaces>button:hover {
     background-color: var(--ws-hover);
 }
 
-#workspaces button.urgent {
+#workspaces>button.empty {
+    background-color: var(--ws-empty);
+}
+
+#workspaces>button.visible {
+    background-color: var(--ws-visible);
+}
+
+#workspaces>button.active {
+    padding: 0px 32px;
+    background-color: var(--ws-active);
+}
+
+#workspaces>button.urgent {
     background-color: var(--ws-urgent);
     color: var(--foreground);
     font-weight: bold;
@@ -30,13 +43,4 @@
     0% { opacity: 1.0; }
     50% { opacity: 0.5; }
     100% { opacity: 1.0; }
-}
-
-#workspaces>button.empty {
-    background-color: var(--ws-empty);
-}
-
-#workspaces>button.active {
-    padding: 0px 32px;
-    background-color: var(--ws-active);
 }

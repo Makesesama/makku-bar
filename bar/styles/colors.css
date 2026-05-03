@@ -20,8 +20,9 @@
     --window-bg: alpha(var(--background), 0.9);
     --module-bg: alpha(var(--mid-bg), 0.8);
     --border-color: var(--light-bg);
-    --ws-active: var(--pink);
-    --ws-inactive: var(--blue);
+    --ws-active: var(--blue);
+    --ws-visible: var(--violet);
+    --ws-inactive: var(--light-grey);
     --ws-empty: var(--dark-grey);
     --ws-hover: var(--turquoise);
     --ws-urgent: var(--red);
