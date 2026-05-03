@@ -272,22 +272,26 @@ tooltip>* {{
     transition: padding 0.05s steps(8);
 }}
 
+#workspaces>button.empty:not(.active):not(.visible) {{
+    background-color: #{colors["base03"]};
+}}
+
+#workspaces>button.visible:not(.active) {{
+    background-color: #{colors["base0E"]};
+}}
+
 #workspaces>button.active {{
     background-color: #{colors["base0D"]};
     padding: 0px 16px;
     border-radius: 100px;
 }}
 
-#workspaces>button>label {{
-    font-size: 0px;
-}}
-
-#workspaces>button.empty:not(.active) {{
-    background-color: #{colors["base03"]};
-}}
-
 #workspaces>button.urgent {{
     background-color: #{colors["base08"]};
+}}
+
+#workspaces>button>label {{
+    font-size: 0px;
 }}
 
 /* Quick Menu styling */
